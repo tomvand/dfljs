@@ -1,13 +1,9 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 var Beacon = require('./sim/beacon.js');
 var Actor = require('./sim/actor.js');
 var draw = require('./sim/draw.js');
+
+var keyboard = require('./sim/keyboardcontroller.js');
 
 var beacon1 = new Beacon(-5.0, 5.0, 'test1');
 var beacon2 = new Beacon(5.0, 5.0, 'test2');
@@ -19,10 +15,17 @@ var state = {
     actors: [actor]
 };
 
+document.onkeydown = keyboard.onKeyPress;
+keyboard.posess(actor);
+
 draw.attach(document.getElementById('canvas'));
 draw.setView(-10.0, -10.0, 20.0, 20.0);
-draw.draw(state);
-},{"./sim/actor.js":2,"./sim/beacon.js":3,"./sim/draw.js":4}],2:[function(require,module,exports){
+
+
+setInterval(function () {
+    draw.draw(state);
+}, 50);
+},{"./sim/actor.js":2,"./sim/beacon.js":3,"./sim/draw.js":4,"./sim/keyboardcontroller.js":5}],2:[function(require,module,exports){
 module.exports = Actor;
 
 /**
@@ -171,4 +174,52 @@ function drawActor(actor) {
     ctx.stroke();
 }
 
+},{}],5:[function(require,module,exports){
+exports.onKeyPress = onKeyPress;
+exports.posess = posess;
+
+var controlled_actor;
+
+var step_angle = 15 / 180.0 * Math.PI;
+var step_distance = 0.5;
+
+/**
+ * Set the actor that is moved by the keyboard controller.
+ * @function
+ * @param {Actor} actor
+ */
+function posess(actor) {
+    controlled_actor = actor;
+}
+
+/**
+ * Handle keypresses by sending the corresponding movement to th eposessed actor.
+ * @function
+ * @param {type} event
+ * @returns {undefined}
+ */
+function onKeyPress(event) {
+    if (!controlled_actor) {
+        return;
+    }
+    event = event || window.event;
+    switch (event.keyCode) {
+        case 38:
+            // Up
+            controlled_actor.move(0, step_distance);
+            break;
+        case 40:
+            // Down
+            controlled_actor.move(0, -step_distance);
+            break;
+        case 37:
+            // Left
+            controlled_actor.move(step_angle, 0);
+            break;
+        case 39:
+            // Right
+            controlled_actor.move(-step_angle, 0);
+            break;
+    }
+}
 },{}]},{},[1]);
