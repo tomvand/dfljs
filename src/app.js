@@ -7,10 +7,12 @@
 var Beacon = require('./sim/beacon.js');
 var draw = require('./sim/draw.js');
 
-var beacon = new Beacon(0.0, 0.0, 'test');
+var beacon1 = new Beacon(-5.0, 5.0, 'test1');
+var beacon2 = new Beacon(5.0, 5.0, 'test2');
 var state = {
-    beacons: [beacon]
+    beacons: [beacon1, beacon2]
 };
 
 draw.attach(document.getElementById('canvas'));
+draw.setView(-10.0, -10.0, 20.0, 20.0);
 draw.draw(state);
