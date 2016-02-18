@@ -5,12 +5,17 @@
  */
 
 var Beacon = require('./sim/beacon.js');
+var Actor = require('./sim/actor.js');
 var draw = require('./sim/draw.js');
 
 var beacon1 = new Beacon(-5.0, 5.0, 'test1');
 var beacon2 = new Beacon(5.0, 5.0, 'test2');
+
+var actor = new Actor(0.0, 0.0, 0.0);
+
 var state = {
-    beacons: [beacon1, beacon2]
+    beacons: [beacon1, beacon2],
+    actors: [actor]
 };
 
 draw.attach(document.getElementById('canvas'));

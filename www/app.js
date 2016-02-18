@@ -6,18 +6,50 @@
  */
 
 var Beacon = require('./sim/beacon.js');
+var Actor = require('./sim/actor.js');
 var draw = require('./sim/draw.js');
 
 var beacon1 = new Beacon(-5.0, 5.0, 'test1');
 var beacon2 = new Beacon(5.0, 5.0, 'test2');
+
+var actor = new Actor(0.0, 0.0, 0.0);
+
 var state = {
-    beacons: [beacon1, beacon2]
+    beacons: [beacon1, beacon2],
+    actors: [actor]
 };
 
 draw.attach(document.getElementById('canvas'));
 draw.setView(-10.0, -10.0, 20.0, 20.0);
 draw.draw(state);
-},{"./sim/beacon.js":2,"./sim/draw.js":3}],2:[function(require,module,exports){
+},{"./sim/actor.js":2,"./sim/beacon.js":3,"./sim/draw.js":4}],2:[function(require,module,exports){
+module.exports = Actor;
+
+/**
+ * Create an Actor.
+ * @constructor
+ * @param {number} x - x position of the actor.
+ * @param {number} y - y position of the actor.
+ * @param {number} direction - direction of the actor.
+ * @returns {Actor}
+ */
+function Actor(x, y, direction) {
+    this.x = x;
+    this.y = y;
+    this.direction = direction;
+}
+
+/**
+ * Turns the actor by the given angle and then moves the given distance.
+ * @param {number} angle
+ * @param {number} distance
+ */
+Actor.prototype.move = function (angle, distance) {
+    this.direction += angle;
+    this.x += distance * Math.cos(this.direction);
+    this.y += distance * Math.sin(this.direction);
+};
+},{}],3:[function(require,module,exports){
 module.exports = Beacon;
 
 /**
@@ -32,7 +64,7 @@ function Beacon(x, y, address) {
     this.y = y;
     this.address = address;
 }
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /**
  * Draw module.
  *
@@ -95,6 +127,7 @@ function setView(left, top, width, height) {
  * state.
  * @typedef {Object} State
  * @property {Beacon[]} beacons - All beacons in the simulation.
+ * @property {Actor[]} actors - All actors in the simulation.
  */
 
 /**
@@ -113,12 +146,28 @@ function draw(state) {
 
     // Draw the current state of the simulation.
     state.beacons.forEach(drawBeacon);
+    state.actors.forEach(drawActor);
 }
 
 function drawBeacon(beacon) {
     ctx.lineWidth = 0.01 * pxPerMeter;
     ctx.beginPath();
-    ctx.arc(beacon.x, beacon.y, 0.2, 0, 2 * Math.PI);
+    ctx.arc(beacon.x, beacon.y, 0.1, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+
+function drawActor(actor) {
+    var r = 0.3;
+
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath();
+    ctx.arc(actor.x, actor.y, r, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.lineWidth = 0.01 * pxPerMeter;
+    ctx.beginPath();
+    ctx.moveTo(actor.x, actor.y);
+    ctx.lineTo(actor.x + r * Math.cos(actor.direction), actor.y + r * Math.sin(actor.direction));
     ctx.stroke();
 }
 

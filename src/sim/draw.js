@@ -60,6 +60,7 @@ function setView(left, top, width, height) {
  * state.
  * @typedef {Object} State
  * @property {Beacon[]} beacons - All beacons in the simulation.
+ * @property {Actor[]} actors - All actors in the simulation.
  */
 
 /**
@@ -78,11 +79,27 @@ function draw(state) {
 
     // Draw the current state of the simulation.
     state.beacons.forEach(drawBeacon);
+    state.actors.forEach(drawActor);
 }
 
 function drawBeacon(beacon) {
     ctx.lineWidth = 0.01 * pxPerMeter;
     ctx.beginPath();
-    ctx.arc(beacon.x, beacon.y, 0.2, 0, 2 * Math.PI);
+    ctx.arc(beacon.x, beacon.y, 0.1, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+
+function drawActor(actor) {
+    var r = 0.3;
+
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath();
+    ctx.arc(actor.x, actor.y, r, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.lineWidth = 0.01 * pxPerMeter;
+    ctx.beginPath();
+    ctx.moveTo(actor.x, actor.y);
+    ctx.lineTo(actor.x + r * Math.cos(actor.direction), actor.y + r * Math.sin(actor.direction));
     ctx.stroke();
 }
