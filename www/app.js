@@ -1,18 +1,21 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var Beacon = require('./sim/beacon.js');
 var Actor = require('./sim/actor.js');
+var measure = require('./sim/measure.js');
 var draw = require('./sim/draw.js');
 
 var keyboard = require('./sim/keyboardcontroller.js');
 
 var beacon1 = new Beacon(-5.0, 5.0, 'test1');
-var beacon2 = new Beacon(5.0, 5.0, 'test2');
+var beacon2 = new Beacon(5.0, 2.0, 'test2');
+var beacons = [beacon1, beacon2];
 
 var actor = new Actor(0.0, 0.0, 0.0);
+var actors = [actor];
 
 var state = {
-    beacons: [beacon1, beacon2],
-    actors: [actor]
+    beacons: beacons,
+    actors: actors
 };
 
 document.onkeydown = keyboard.onKeyPress;
@@ -23,9 +26,19 @@ draw.setView(-10.0, -10.0, 20.0, 20.0);
 
 
 setInterval(function () {
+    // Update measurements
+    state.measurements = [];
+    beacons.forEach(function (receiver) {
+        beacons.forEach(function (transmitter) {
+            if (receiver !== transmitter) {
+                state.measurements.push(measure.measure(receiver, transmitter, actors));
+            }
+        });
+    });
+    // Draw the current state
     draw.draw(state);
-}, 50);
-},{"./sim/actor.js":2,"./sim/beacon.js":3,"./sim/draw.js":4,"./sim/keyboardcontroller.js":5}],2:[function(require,module,exports){
+}, 100);
+},{"./sim/actor.js":2,"./sim/beacon.js":3,"./sim/draw.js":4,"./sim/keyboardcontroller.js":5,"./sim/measure.js":6}],2:[function(require,module,exports){
 module.exports = Actor;
 
 /**
@@ -74,6 +87,8 @@ function Beacon(x, y, address) {
  * Draws the current state of the simulation.
  * @module
  */
+
+var measure = require('./measure.js');
 
 exports.attach = attach;
 exports.setView = setView;
@@ -168,6 +183,7 @@ function setView(left, top, width, height) {
  * @typedef {Object} State
  * @property {Beacon[]} beacons - All beacons in the simulation.
  * @property {Actor[]} actors - All actors in the simulation.
+ * @property {Measurement[]} measurements - All current measurements.
  */
 
 /**
@@ -187,12 +203,14 @@ function draw(state) {
     // Draw the current state of the simulation.
     state.beacons.forEach(drawBeacon);
     state.actors.forEach(drawActor);
+    state.measurements.forEach(drawMeasurement);
 }
 
 function drawBeacon(beacon) {
     var pos = world_coordinates.transform(beacon.x, beacon.y);
     var r = world_coordinates.transform(0.10);
     ctx.lineWidth = 1.0;
+    ctx.strokeStyle = '#000000';
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
     ctx.stroke();
@@ -207,20 +225,69 @@ function drawBeacon(beacon) {
 function drawActor(actor) {
     var pos = world_coordinates.transform(actor.x, actor.y);
     var r = world_coordinates.transform(0.30);
-
-    ctx.fillStyle = '#FF0000';
+    ctx.fillStyle = '#0000FF';
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
     ctx.fill();
 
     ctx.lineWidth = 1;
+    ctx.strokeStyle = '#FFFFFF';
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
     ctx.lineTo(pos.x + r * Math.cos(actor.direction), pos.y - r * Math.sin(actor.direction));
     ctx.stroke();
 }
 
-},{}],5:[function(require,module,exports){
+function ellipse(phase, x, y, angle, major_axis, minor_axis) {
+    var x_local = 0.5 * major_axis * Math.cos(phase);
+    var y_local = 0.5 * minor_axis * Math.sin(phase);
+    return {
+        x: x + x_local * Math.cos(angle) - y_local * Math.sin(angle),
+        y: y + x_local * Math.sin(angle) + y_local * Math.cos(angle)
+    };
+}
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+function drawMeasurement(measurement) {
+    var rx = world_coordinates.transform(measurement.receiver.x, measurement.receiver.y);
+    var tx = world_coordinates.transform(measurement.transmitter.x, measurement.transmitter.y);
+
+    var x = 0.5 * (rx.x + tx.x);
+    var y = 0.5 * (rx.y + tx.y);
+    var angle = Math.atan2(rx.y - tx.y, rx.x - tx.x);
+    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 2 * world_coordinates.transform(measure.params.sigma_l);
+    var mi_a = 2 * world_coordinates.transform(measure.params.sigma_l);
+
+    var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
+    ctx.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+    ctx.beginPath();
+    var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
+    ctx.moveTo(pos.x, pos.y);
+    for (phase = 0.0; phase < 2 * Math.PI; phase += 0.1) {
+        pos = ellipse(phase, x, y, angle, ma_a, mi_a);
+        ctx.lineTo(pos.x, pos.y);
+    }
+    var old_operation = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = 'destination-over'; // Draw behind everything else
+    ctx.fill();
+    ctx.globalCompositeOperation = old_operation;
+
+    if (measurement.delta_rssi < -1.0) {
+        ctx.font = FONT_LABEL;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'black';
+        ctx.fillText(measurement.delta_rssi.toFixed(2) + ' dB',
+                0.75 * rx.x + 0.25 * tx.x,
+                0.75 * rx.y + 0.25 * tx.y);
+    }
+
+}
+
+},{"./measure.js":6}],5:[function(require,module,exports){
 exports.onKeyPress = onKeyPress;
 exports.posess = posess;
 
@@ -267,5 +334,52 @@ function onKeyPress(event) {
             controlled_actor.move(-step_angle, 0);
             break;
     }
+}
+},{}],6:[function(require,module,exports){
+exports.measure = measure;
+
+/**
+ * @property {number} phi Attenuation in dB.
+ * @property {number} sigma_l Beam width.
+ */
+var params = {
+    phi: -7.0,
+    sigma_l: 0.4
+};
+exports.params = params;
+
+/**
+ * @typedef Measurement
+ * @property {Beacon} receiver - beacon from which the measurement is performed
+ * @property {Beacon} transmitter - beacon that is observed
+ * @property {number} delta_rssi - change in rssi in dB
+ */
+
+/**
+ *
+ * @param {Beacon} receiver - beacon from which the measurement is performed
+ * @param {Beacon} transmitter - beacon that is observed
+ * @param {Actor[]} actors - actors that can interfere with the signal
+ * @returns {Measurement} - observed change in rssi
+ */
+function measure(receiver, transmitter, actors) {
+    // Exponential model as described in Nannuro et al. 2013.
+    delta_rssi = 0.0;
+    actors.forEach(function (actor) {
+        delta_rssi += params.phi * Math.exp(-lambda(receiver, transmitter, actor) / params.sigma_l);
+    });
+    return {
+        receiver: receiver,
+        transmitter: transmitter,
+        delta_rssi: delta_rssi
+    };
+}
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+function lambda(from, to, actor) {
+    return distance(from.x, from.y, actor.x, actor.y) + distance(to.x, to.y, actor.x, actor.y) - distance(from.x, from.y, to.x, to.y);
 }
 },{}]},{},[1]);

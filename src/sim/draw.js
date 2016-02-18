@@ -5,6 +5,8 @@
  * @module
  */
 
+var measure = require('./measure.js');
+
 exports.attach = attach;
 exports.setView = setView;
 exports.draw = draw;
@@ -98,6 +100,7 @@ function setView(left, top, width, height) {
  * @typedef {Object} State
  * @property {Beacon[]} beacons - All beacons in the simulation.
  * @property {Actor[]} actors - All actors in the simulation.
+ * @property {Measurement[]} measurements - All current measurements.
  */
 
 /**
@@ -117,12 +120,14 @@ function draw(state) {
     // Draw the current state of the simulation.
     state.beacons.forEach(drawBeacon);
     state.actors.forEach(drawActor);
+    state.measurements.forEach(drawMeasurement);
 }
 
 function drawBeacon(beacon) {
     var pos = world_coordinates.transform(beacon.x, beacon.y);
     var r = world_coordinates.transform(0.10);
     ctx.lineWidth = 1.0;
+    ctx.strokeStyle = '#000000';
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
     ctx.stroke();
@@ -137,15 +142,64 @@ function drawBeacon(beacon) {
 function drawActor(actor) {
     var pos = world_coordinates.transform(actor.x, actor.y);
     var r = world_coordinates.transform(0.30);
-
-    ctx.fillStyle = '#FF0000';
+    ctx.fillStyle = '#0000FF';
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
     ctx.fill();
 
     ctx.lineWidth = 1;
+    ctx.strokeStyle = '#FFFFFF';
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
     ctx.lineTo(pos.x + r * Math.cos(actor.direction), pos.y - r * Math.sin(actor.direction));
     ctx.stroke();
+}
+
+function ellipse(phase, x, y, angle, major_axis, minor_axis) {
+    var x_local = 0.5 * major_axis * Math.cos(phase);
+    var y_local = 0.5 * minor_axis * Math.sin(phase);
+    return {
+        x: x + x_local * Math.cos(angle) - y_local * Math.sin(angle),
+        y: y + x_local * Math.sin(angle) + y_local * Math.cos(angle)
+    };
+}
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+function drawMeasurement(measurement) {
+    var rx = world_coordinates.transform(measurement.receiver.x, measurement.receiver.y);
+    var tx = world_coordinates.transform(measurement.transmitter.x, measurement.transmitter.y);
+
+    var x = 0.5 * (rx.x + tx.x);
+    var y = 0.5 * (rx.y + tx.y);
+    var angle = Math.atan2(rx.y - tx.y, rx.x - tx.x);
+    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 2 * world_coordinates.transform(measure.params.sigma_l);
+    var mi_a = 2 * world_coordinates.transform(measure.params.sigma_l);
+
+    var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
+    ctx.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+    ctx.beginPath();
+    var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
+    ctx.moveTo(pos.x, pos.y);
+    for (phase = 0.0; phase < 2 * Math.PI; phase += 0.1) {
+        pos = ellipse(phase, x, y, angle, ma_a, mi_a);
+        ctx.lineTo(pos.x, pos.y);
+    }
+    var old_operation = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = 'destination-over'; // Draw behind everything else
+    ctx.fill();
+    ctx.globalCompositeOperation = old_operation;
+
+    if (measurement.delta_rssi < -1.0) {
+        ctx.font = FONT_LABEL;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'black';
+        ctx.fillText(measurement.delta_rssi.toFixed(2) + ' dB',
+                0.75 * rx.x + 0.25 * tx.x,
+                0.75 * rx.y + 0.25 * tx.y);
+    }
+
 }
