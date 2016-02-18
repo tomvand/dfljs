@@ -16,7 +16,7 @@ exports.draw = draw;
  * @constant
  * @type String
  */
-var FONT_LABEL = '15px Arial';
+var FONT_LABEL = '10px Arial';
 
 /**
  * @description Rendering context that all drawing functions should draw to.
@@ -175,8 +175,8 @@ function drawMeasurement(measurement) {
     var x = 0.5 * (rx.x + tx.x);
     var y = 0.5 * (rx.y + tx.y);
     var angle = Math.atan2(rx.y - tx.y, rx.x - tx.x);
-    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 2 * world_coordinates.transform(measure.params.sigma_l);
-    var mi_a = 2 * world_coordinates.transform(measure.params.sigma_l);
+    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 4 * world_coordinates.transform(measure.params.sigma_l);
+    var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
 
     var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
     ctx.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';

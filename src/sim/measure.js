@@ -5,8 +5,8 @@ exports.measure = measure;
  * @property {number} sigma_l Beam width.
  */
 var params = {
-    phi: -7.0,
-    sigma_l: 0.4
+    phi: -5.0,
+    sigma_l: 0.2
 };
 exports.params = params;
 

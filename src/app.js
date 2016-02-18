@@ -5,9 +5,14 @@ var draw = require('./sim/draw.js');
 
 var keyboard = require('./sim/keyboardcontroller.js');
 
-var beacon1 = new Beacon(-5.0, 5.0, 'test1');
-var beacon2 = new Beacon(5.0, 2.0, 'test2');
-var beacons = [beacon1, beacon2];
+var beacons = [
+    new Beacon(-5.0, 2.0, 'CF:5E:84:EF:00:91'),
+    new Beacon(-5.0, -3.0, 'EB:4D:30:14:6D:C1'),
+    new Beacon(-2.0, -2.0, 'D5:A7:34:EC:72:90'),
+    new Beacon(0.0, -2.0, 'EF:36:60:78:1F:1D'),
+    new Beacon(2.0, -3.0, 'D7:D5:51:82:49:43'),
+    new Beacon(2.0, 3.0, 'C0:82:3E:B9:F5:91')
+];
 
 var actor = new Actor(0.0, 0.0, 0.0);
 var actors = [actor];
@@ -21,7 +26,7 @@ document.onkeydown = keyboard.onKeyPress;
 keyboard.posess(actor);
 
 draw.attach(document.getElementById('canvas'));
-draw.setView(-10.0, -10.0, 20.0, 20.0);
+draw.setView(-8.0, -4.0, 12.0, 8.0);
 
 
 setInterval(function () {

@@ -6,9 +6,14 @@ var draw = require('./sim/draw.js');
 
 var keyboard = require('./sim/keyboardcontroller.js');
 
-var beacon1 = new Beacon(-5.0, 5.0, 'test1');
-var beacon2 = new Beacon(5.0, 2.0, 'test2');
-var beacons = [beacon1, beacon2];
+var beacons = [
+    new Beacon(-5.0, 2.0, 'CF:5E:84:EF:00:91'),
+    new Beacon(-5.0, -3.0, 'EB:4D:30:14:6D:C1'),
+    new Beacon(-2.0, -2.0, 'D5:A7:34:EC:72:90'),
+    new Beacon(0.0, -2.0, 'EF:36:60:78:1F:1D'),
+    new Beacon(2.0, -3.0, 'D7:D5:51:82:49:43'),
+    new Beacon(2.0, 3.0, 'C0:82:3E:B9:F5:91')
+];
 
 var actor = new Actor(0.0, 0.0, 0.0);
 var actors = [actor];
@@ -22,7 +27,7 @@ document.onkeydown = keyboard.onKeyPress;
 keyboard.posess(actor);
 
 draw.attach(document.getElementById('canvas'));
-draw.setView(-10.0, -10.0, 20.0, 20.0);
+draw.setView(-8.0, -4.0, 12.0, 8.0);
 
 
 setInterval(function () {
@@ -99,7 +104,7 @@ exports.draw = draw;
  * @constant
  * @type String
  */
-var FONT_LABEL = '15px Arial';
+var FONT_LABEL = '10px Arial';
 
 /**
  * @description Rendering context that all drawing functions should draw to.
@@ -258,8 +263,8 @@ function drawMeasurement(measurement) {
     var x = 0.5 * (rx.x + tx.x);
     var y = 0.5 * (rx.y + tx.y);
     var angle = Math.atan2(rx.y - tx.y, rx.x - tx.x);
-    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 2 * world_coordinates.transform(measure.params.sigma_l);
-    var mi_a = 2 * world_coordinates.transform(measure.params.sigma_l);
+    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 4 * world_coordinates.transform(measure.params.sigma_l);
+    var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
 
     var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
     ctx.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
@@ -343,8 +348,8 @@ exports.measure = measure;
  * @property {number} sigma_l Beam width.
  */
 var params = {
-    phi: -7.0,
-    sigma_l: 0.4
+    phi: -5.0,
+    sigma_l: 0.2
 };
 exports.params = params;
 
