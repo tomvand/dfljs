@@ -205,9 +205,14 @@ function drawMeasurement(measurement) {
 
 function drawAlm(alm) {
     alm.particles.forEach(function (particle) {
-        var size = 2.0;
+        var size = 2;
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = 'rgba(0,255,0,' + particle.weight + ')';
+        if (!isNaN(particle.weight)) {
+            ctx.fillStyle = 'blue';
+            size = 1000.0 * particle.weight;
+        } else {
+            ctx.fillStyle = 'red';
+        }
         ctx.rect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
         ctx.fill();
     });

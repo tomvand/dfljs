@@ -55,18 +55,22 @@ describe('ALM particle filter', function () {
         var beacons = [
             {x: -4.0, y: 0.0},
             {x: 4.0, y: 0.0},
-            {x: 0.0, y: 4.0}
+            {x: 0.0, y: 4.0},
+            {x: 0.0, y: -4.0}
         ];
         var observations = [
-            {receiver: beacons[0], transmitter: beacons[1], deltaRSSI: -5.0},
-            {receiver: beacons[0], transmitter: beacons[2], deltaRSSI: 0.0}
+            {receiver: beacons[0], transmitter: beacons[1], delta_rssi: -5.0},
+            {receiver: beacons[0], transmitter: beacons[2], delta_rssi: 0.0}
         ];
 
-        alm.observe(observations);
+        alm.predict(0.100);
+        for (i = 0; i < 10; i++) {
+            alm.observe(observations);
+        }
 
         it('particles keep a valid weight', function () {
             alm.particles.forEach(function (particle) {
-                assert.ok(particle.weight);
+                assert(!isNaN(particle.weight));
             });
         });
 
@@ -75,7 +79,11 @@ describe('ALM particle filter', function () {
             alm.particles.forEach(function (particle) {
                 total += particle.weight;
             });
-            assert(Math.abs(1.0 - total) < 0.001);
+            assert(Math.abs(1.0 - total) < 0.00001);
+        });
+
+        it('resamples the same number of particles', function () {
+            assert.equal(alm.particles.length, Ntargets * Nparticles);
         });
     });
 });

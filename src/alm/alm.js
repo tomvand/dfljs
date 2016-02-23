@@ -49,15 +49,14 @@ AlmFilter.prototype.observe = function (observations) {
     };
 
     var muhat_k = 0;
-    this.particles.forEach(function (particle) {
-        muhat_k = mathjs.add(muhat_k, mathjs.multiply(particle.weight, gx(particle.state)));
-    });
-
     var Sigmahat_k = 0;
     this.particles.forEach(function (particle) {
-        Sigmahat_k_j = mathjs.multiply(gx(particle.state), mathjs.transpose(gx(particle.state)));
+        gxj = gx(particle.state);
+        muhat_k = mathjs.add(muhat_k, mathjs.multiply(particle.weight, gxj));
+        Sigmahat_k_j = mathjs.multiply(gxj, mathjs.transpose(gxj));
         Sigmahat_k = mathjs.add(Sigmahat_k, mathjs.multiply(particle.weight, Sigmahat_k_j));
     });
+
 
     // Weight update
     var Sigma_z = mathjs.multiply(observation.params.sigma_z, mathjs.eye(observations.length));
@@ -67,15 +66,65 @@ AlmFilter.prototype.observe = function (observations) {
     });
     zk = mathjs.transpose(mathjs.matrix([zk]));
 
+    var pzk = normpdf(zk, muhat_k, mathjs.add(Sigmahat_k, Sigma_z));
+    this.particles.forEach(function (particle) {
+        var Fk = pzk / normpdf(zk, mathjs.add(gx(particle.state), muhat_k), mathjs.add(Sigmahat_k, Sigma_z));
+        particle.weight /= Fk;
+    });
+
+    // Normalize
+    this.normalize();
+
+    // Resample
+    this.resample();
+};
+
+AlmFilter.prototype.normalize = function () {
+    var total_weight = 0.0;
+    this.particles.forEach(function (particle) {
+        total_weight += particle.weight;
+    });
+    console.log('total weight: ' + total_weight);
+
+    var total_weight2 = 0.0;
+    for (i = 0; i < this.particles.length; i++) {
+        total_weight2 += this.particles[i].length;
+    }
+    console.log('total weight recalculated...: ' + total_weight2);
+
+    var total_normalized_weight = 0.0;
+    this.particles.forEach(function (particle) {
+        console.log('before: ' + particle.weight);
+        particle.weight /= total_weight;
+        console.log('after: ' + particle.weight);
+        total_normalized_weight += particle.weight;
+    });
+    console.log('total weight after normalization: ' + total_normalized_weight);
+};
+
+AlmFilter.prototype.resample = function () {
+    var new_particles = [];
+    var M = this.particles.length;
+    var r = Math.random() / M;
+    var c = this.particles[0].weight;
+    var i = 0;
+
     var total = 0.0;
     this.particles.forEach(function (particle) {
-        var Fk = normpdf(zk, muhat_k, mathjs.add(Sigmahat_k, Sigma_z)) /
-                normpdf(zk, mathjs.add(gx(particle.state), muhat_k), mathjs.add(Sigmahat_k, Sigma_z));
-        particle.weight = particle.weight / Fk;
         total += particle.weight;
     });
-    this.particles.forEach(function (particle) {
-        particle.weight = particle.weight / total;
-    });
+    console.log('total at start of resampling: ' + total);
+
+    for (m = 0; m < M; m++) {
+        var U = r + m / M;
+        while (U > c) {
+            console.log('m=' + m + ' U=' + U + ' M=' + M + ' r=' + r + ' c=' + c + ' i=' + i)
+            i++;
+            c += this.particles[i].weight;
+        }
+        new_particles[m] = this.particles[i];
+        new_particles[m].weight = 1.0 / M;
+    }
+    this.particles = new_particles;
 };
 

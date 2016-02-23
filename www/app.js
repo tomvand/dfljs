@@ -49236,15 +49236,14 @@ AlmFilter.prototype.observe = function (observations) {
     };
 
     var muhat_k = 0;
-    this.particles.forEach(function (particle) {
-        muhat_k = mathjs.add(muhat_k, mathjs.multiply(particle.weight, gx(particle.state)));
-    });
-
     var Sigmahat_k = 0;
     this.particles.forEach(function (particle) {
-        Sigmahat_k_j = mathjs.multiply(gx(particle.state), mathjs.transpose(gx(particle.state)));
+        gxj = gx(particle.state);
+        muhat_k = mathjs.add(muhat_k, mathjs.multiply(particle.weight, gxj));
+        Sigmahat_k_j = mathjs.multiply(gxj, mathjs.transpose(gxj));
         Sigmahat_k = mathjs.add(Sigmahat_k, mathjs.multiply(particle.weight, Sigmahat_k_j));
     });
+
 
     // Weight update
     var Sigma_z = mathjs.multiply(observation.params.sigma_z, mathjs.eye(observations.length));
@@ -49255,15 +49254,15 @@ AlmFilter.prototype.observe = function (observations) {
     zk = mathjs.transpose(mathjs.matrix([zk]));
 
     var total = 0.0;
+    var pzk = normpdf(zk, muhat_k, mathjs.add(Sigmahat_k, Sigma_z));
     this.particles.forEach(function (particle) {
-        var Fk = normpdf(zk, muhat_k, mathjs.add(Sigmahat_k, Sigma_z)) /
-                normpdf(zk, mathjs.add(gx(particle.state), muhat_k), mathjs.add(Sigmahat_k, Sigma_z));
+        var Fk = pzk / normpdf(zk, mathjs.add(gx(particle.state), muhat_k), mathjs.add(Sigmahat_k, Sigma_z));
         particle.weight = particle.weight / Fk;
         total += particle.weight;
     });
-    this.particles.forEach(function (particle) {
-        particle.weight = particle.weight / total;
-    });
+//    this.particles.forEach(function (particle) {
+//        particle.weight = particle.weight / total;
+//    });
 };
 
 
@@ -49642,9 +49641,14 @@ function drawMeasurement(measurement) {
 
 function drawAlm(alm) {
     alm.particles.forEach(function (particle) {
-        var size = 2.0;
+        var size = 2;
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = 'rgba(0,255,0,' + particle.weight + ')';
+        if (!isNaN(particle.weight)) {
+            ctx.fillStyle = 'blue';
+            size = 1000.0 * particle.weight;
+        } else {
+            ctx.fillStyle = 'red';
+        }
         ctx.rect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
         ctx.fill();
     });
