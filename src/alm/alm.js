@@ -8,6 +8,8 @@ var observation = require('../model/observation.js');
 var mathjs = require('mathjs');
 var normpdf = require('../util/normpdf.js');
 
+var clone = require('clone');
+
 function AlmFilter(Ntargets, Nparticles, initInfo) {
     this.Ntargets = Ntargets;
     this.Nparticles = Nparticles;
@@ -106,10 +108,8 @@ AlmFilter.prototype.resample = function () {
             i++;
             c += this.particles[i].weight;
         }
-        new_particles.push({
-            state: this.particles[i].state,
-            weight: 1.0 / M
-        });
+        new_particles[m] = clone(this.particles[i]);
+        new_particles[m].weight = 1.0 / M;
     }
     this.particles = new_particles;
 };

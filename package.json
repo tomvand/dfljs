@@ -11,7 +11,8 @@
   "author": "tom",
   "contributors": [],
   "dependencies": {
-    "mathjs": "~2.7.0"
+    "mathjs": "~2.7.0",
+    "clone": "~1.0.2"
   },
   "devDependencies": {
     "watchify": "~3.7.0",

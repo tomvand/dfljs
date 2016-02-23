@@ -20,7 +20,7 @@ var actor = new Actor(0.0, 0.0, 0.0);
 var actors = [actor];
 
 var Ntargets = 1;
-var Nparticles = 10;
+var Nparticles = 50;
 var initInfo = {
     xmin: -5.0,
     xmax: 2.0,
