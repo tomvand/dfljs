@@ -3,6 +3,8 @@ var Actor = require('./sim/actor.js');
 var measure = require('./sim/measure.js');
 var draw = require('./sim/draw.js');
 
+var Alm = require('./alm/alm.js');
+
 var keyboard = require('./sim/keyboardcontroller.js');
 
 var beacons = [
@@ -16,6 +18,16 @@ var beacons = [
 
 var actor = new Actor(0.0, 0.0, 0.0);
 var actors = [actor];
+
+var Ntargets = 1;
+var Nparticles = 10;
+var initInfo = {
+    xmin: -5.0,
+    xmax: 2.0,
+    ymin: -3.0,
+    ymax: 3.0
+};
+var alm = new Alm(Ntargets, Nparticles, initInfo);
 
 var state = {
     beacons: beacons,
@@ -39,6 +51,10 @@ setInterval(function () {
             }
         });
     });
+    // Update filter
+    alm.predict(0.100);
+    alm.observe(state.measurements);
     // Draw the current state
     draw.draw(state);
+    draw.drawAlm(alm);
 }, 100);

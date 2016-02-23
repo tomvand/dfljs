@@ -10,6 +10,7 @@ var measure = require('./measure.js');
 exports.attach = attach;
 exports.setView = setView;
 exports.draw = draw;
+exports.drawAlm = drawAlm;
 
 /**
  * Font for labels.
@@ -118,9 +119,9 @@ function draw(state) {
     ctx.restore();
 
     // Draw the current state of the simulation.
+    state.measurements.forEach(drawMeasurement);
     state.beacons.forEach(drawBeacon);
     state.actors.forEach(drawActor);
-    state.measurements.forEach(drawMeasurement);
 }
 
 function drawBeacon(beacon) {
@@ -188,9 +189,7 @@ function drawMeasurement(measurement) {
         ctx.lineTo(pos.x, pos.y);
     }
     var old_operation = ctx.globalCompositeOperation;
-    ctx.globalCompositeOperation = 'destination-over'; // Draw behind everything else
     ctx.fill();
-    ctx.globalCompositeOperation = old_operation;
 
     if (measurement.delta_rssi < -1.0) {
         ctx.font = FONT_LABEL;
@@ -202,4 +201,14 @@ function drawMeasurement(measurement) {
                 0.75 * rx.y + 0.25 * tx.y);
     }
 
+}
+
+function drawAlm(alm) {
+    alm.particles.forEach(function (particle) {
+        var size = 2.0;
+        var pos = world_coordinates.transform(particle.state.x, particle.state.y);
+        ctx.fillStyle = 'rgba(0,255,0,' + particle.weight + ')';
+        ctx.rect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
+        ctx.fill();
+    });
 }
