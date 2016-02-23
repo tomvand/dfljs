@@ -17,16 +17,11 @@ describe('ALM particle filter', function () {
         ymax: 4
     };
 
-    var beacons = [
-        {x: -5.0, y: 0.0},
-        {x: 5.0, y: 0.0}
-    ];
-
     var deltaT = 0.1;
 
     describe('constructor', function () {
         it('initializes particles', function () {
-            var alm = new Alm(Ntargets, Nparticles, initInfo, beacons);
+            var alm = new Alm(Ntargets, Nparticles, initInfo);
 
             assert.equal(alm.particles.length, Ntargets * Nparticles);
             alm.particles.forEach(function (particle) {
@@ -38,26 +33,49 @@ describe('ALM particle filter', function () {
         });
     });
 
-    describe('step()', function () {
-        var moreBeacons = [
-            {x: -5.0, y: -5.0},
-            {x: 5.0, y: -5.0},
-            {x: 5.0, y: 5.0},
-            {x: -5.0, y: 5.0}
-        ];
-
-        var alm = new Alm(Ntargets, Nparticles, initInfo, moreBeacons);
+    describe('.predict(deltaT)', function () {
+        var alm = new Alm(Ntargets, Nparticles, initInfo);
 
         it('particles keep a valid state', function () {
             alm.particles.forEach(function (particle) {
                 assert(!isNaN(particle.state.x));
                 assert(!isNaN(particle.state.y));
             });
-            alm.step(deltaT);
+            alm.predict(deltaT);
             alm.particles.forEach(function (particle) {
                 assert(!isNaN(particle.state.x));
                 assert(!isNaN(particle.state.y));
             });
+        });
+    });
+
+    describe('.observe(observations)', function () {
+        var alm = new Alm(Ntargets, Nparticles, initInfo);
+
+        var beacons = [
+            {x: -4.0, y: 0.0},
+            {x: 4.0, y: 0.0},
+            {x: 0.0, y: 4.0}
+        ];
+        var observations = [
+            {receiver: beacons[0], transmitter: beacons[1], deltaRSSI: -5.0},
+            {receiver: beacons[0], transmitter: beacons[2], deltaRSSI: 0.0}
+        ];
+
+        alm.observe(observations);
+
+        it('particles keep a valid weight', function () {
+            alm.particles.forEach(function (particle) {
+                assert.ok(particle.weight);
+            });
+        });
+
+        it('particle weight are normalized', function () {
+            var total = 0.0;
+            alm.particles.forEach(function (particle) {
+                total += particle.weight;
+            });
+            assert(Math.abs(1.0 - total) < 0.001);
         });
     });
 });
