@@ -79,7 +79,7 @@ AlmFilter.prototype.observe = function (observations) {
     this.normalize();
 
     // Resample
-//    this.resample();
+    this.resample();
 };
 
 AlmFilter.prototype.normalize = function () {
@@ -105,7 +105,7 @@ AlmFilter.prototype.normalize = function () {
 
 AlmFilter.prototype.resample = function () {
     var new_particles = [];
-    var M = this.particles.length;
+    var M = this.Ntargets * this.Nparticles;
     var r = Math.random() / M;
     var c = this.particles[0].weight;
     var i = 0;
@@ -123,8 +123,10 @@ AlmFilter.prototype.resample = function () {
             i++;
             c += this.particles[i].weight;
         }
-        new_particles[m] = this.particles[i];
-        new_particles[m].weight = 1.0 / M;
+        new_particles.push({
+            state: this.particles[i].state,
+            weight: 1.0 / M
+        });
     }
     this.particles = new_particles;
 };
