@@ -87,20 +87,10 @@ AlmFilter.prototype.normalize = function () {
     this.particles.forEach(function (particle) {
         total_weight += particle.weight;
     });
-    console.log('total weight: ' + total_weight);
 
-    var total_normalized_weight = 0.0;
     this.particles.forEach(function (particle) {
         particle.weight /= total_weight;
-        total_normalized_weight += particle.weight;
     });
-    console.log('total weight after normalization: ' + total_normalized_weight);
-
-    var total2 = 0.0;
-    this.particles.forEach(function (particle) {
-        total2 += particle.weight;
-    });
-    console.log('total weight after normalization: ' + total2);
 };
 
 AlmFilter.prototype.resample = function () {
@@ -110,16 +100,9 @@ AlmFilter.prototype.resample = function () {
     var c = this.particles[0].weight;
     var i = 0;
 
-    var total = 0.0;
-    this.particles.forEach(function (particle) {
-        total += particle.weight;
-    });
-    console.log('total at start of resampling: ' + total);
-
     for (var m = 0; m < M; m++) {
         var U = r + m / M;
         while (U > c) {
-            console.log('m=' + m + ' U=' + U + ' M=' + M + ' r=' + r + ' c=' + c + ' i=' + i)
             i++;
             c += this.particles[i].weight;
         }

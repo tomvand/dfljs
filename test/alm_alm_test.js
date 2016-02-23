@@ -65,7 +65,7 @@ describe('ALM particle filter', function () {
         ];
 
         alm.predict(0.100);
-        for (i = 0; i < 2000; i++) {
+        for (i = 0; i < 200; i++) {
             alm.observe(observations);
         }
 
@@ -86,17 +86,5 @@ describe('ALM particle filter', function () {
         it('resamples the same number of particles', function () {
             assert.equal(alm.particles.length, Ntargets * Nparticles);
         });
-    });
-});
-
-describe('RUNNING TOTAL', function () {
-    var total = 0.0;
-    var array = [{value: 1.0}, {value: 2.0}, {value: 3.0}];
-    array.forEach(function (element) {
-        element.value /= element.value;
-        total += element.value;
-    });
-    it('works', function () {
-        assert.equal(total, 3.0);
     });
 });
