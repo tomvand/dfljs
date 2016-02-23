@@ -5,15 +5,17 @@ var params = {
 };
 exports.params = params;
 
+exports.observe_all = observe_all;
+
 exports.observe = observe;
 
-function observe(beacons, states) {
+function observe_all(beacons, states) {
     var observation = [];
     for (i = 0; i < beacons.length; i++) {
         for (j = i + 1; j < beacons.length; j++) {
             var deltaRSSI = 0.0;
             states.forEach(function (state) {
-                deltaRSSI += params.phi * Math.exp(-lambda(beacons[i], beacons[j], state) / params.sigma_l);
+                deltaRSSI += observe(beacons[i], beacons[j], state);
             });
             observation.push({
                 beacons: [beacons[i], beacons[j]],
@@ -22,6 +24,10 @@ function observe(beacons, states) {
         }
     }
     return observation;
+}
+
+function observe(receiver, transmitter, state) {
+    return params.phi * Math.exp(-lambda(receiver, transmitter, state) / params.sigma_l);
 }
 
 function lambda(from, to, actor) {
