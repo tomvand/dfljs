@@ -3,6 +3,8 @@ module.exports = AlmFilter;
 var State = require('../model/state.js');
 var observation = require('../model/observation.js');
 
+var normpdf = require('../util/normpdf.js');
+
 function AlmFilter(Ntargets, Nparticles, initInfo, beacons) {
     this.beacons = beacons;
     this.Ntargets = Ntargets;
@@ -22,6 +24,7 @@ AlmFilter.prototype.initializeParticles = function (initInfo) {
 AlmFilter.prototype.step = function (deltaT, observation) {
     this.proposal(deltaT);
     var dens = this.approximateDensity();
+    this.updateWeights(dens);
 };
 
 AlmFilter.prototype.proposal = function (deltaT) {
@@ -57,11 +60,21 @@ AlmFilter.prototype.approximateDensity = function () {
         }
     });
 
-    console.log(mu_k_hat);
-    console.log(Sigma_k_hat);
-
     return {
         mu_k_hat: mu_k_hat,
         Sigma_k_hat: Sigma_k_hat
     };
+};
+
+AlmFilter.prototype.updateWeights = function (dens) {
+    var Sigma_z = [[]];
+    for (i = 0; i < dens.mu_k_hat.length; i++) {
+        Sigma_z[i] = [];
+        for (j = 0; j < dens.mu_k_hat.length; j++) {
+            Sigma_z[i][j] = (i === j) ? observation.params.sigma_z : 0.0;
+        }
+    }
+
+    this.particles.forEach(function (particle) {
+    });
 };
