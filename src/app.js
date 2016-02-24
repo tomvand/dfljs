@@ -51,10 +51,11 @@ setInterval(function () {
             }
         });
     });
-    // Update filter
-    alm.predict(0.100);
-    alm.observe(state.measurements);
+
     // Draw the current state
     draw.draw(state);
     draw.drawAlm(alm);
+    // Update filter
+    alm.predict(0.100);
+    alm.observe(state.measurements);
 }, 100);

@@ -96,6 +96,17 @@ AlmFilter.prototype.normalize = function () {
 };
 
 AlmFilter.prototype.resample = function () {
+    // Calculate the effective sample size
+    var Swk2 = 0.0;
+    this.particles.forEach(function (particle) {
+        Swk2 += particle.weight * particle.weight;
+    });
+    var Neff = 1.0 / Swk2;
+
+    if (Neff > this.Ntargets * this.Nparticles / 2.0) {
+        return;
+    }
+
     var new_particles = [];
     var M = this.Ntargets * this.Nparticles;
     var r = Math.random() / M;

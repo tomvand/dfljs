@@ -51139,6 +51139,17 @@ AlmFilter.prototype.normalize = function () {
 };
 
 AlmFilter.prototype.resample = function () {
+    // Calculate the effective sample size
+    var Swk2 = 0.0;
+    this.particles.forEach(function (particle) {
+        Swk2 += particle.weight * particle.weight;
+    });
+    var Neff = 1.0 / Swk2;
+
+    if (Neff > this.Ntargets * this.Nparticles / 2.0) {
+        return;
+    }
+
     var new_particles = [];
     var M = this.Ntargets * this.Nparticles;
     var r = Math.random() / M;
@@ -51212,12 +51223,13 @@ setInterval(function () {
             }
         });
     });
-    // Update filter
-    alm.predict(0.100);
-    alm.observe(state.measurements);
+
     // Draw the current state
     draw.draw(state);
     draw.drawAlm(alm);
+    // Update filter
+    alm.predict(0.100);
+    alm.observe(state.measurements);
 }, 100);
 },{"./alm/alm.js":502,"./sim/actor.js":506,"./sim/beacon.js":507,"./sim/draw.js":508,"./sim/keyboardcontroller.js":509,"./sim/measure.js":510}],504:[function(require,module,exports){
 var params = {
@@ -51277,8 +51289,8 @@ State.prototype.initialize = function (initInfo) {
 };
 
 State.prototype.predict = function (deltaT) {
-    var vx = 2.0 * randn();
-    var vy = 2.0 * randn();
+    var vx = 3.0 * randn();
+    var vy = 3.0 * randn();
 
     this.x += vx * deltaT;
     this.y += vy * deltaT;
