@@ -79,6 +79,7 @@ setInterval(function () {
     });
     // Update ALM filter
     alm.observe(state.measurements);
+    alm.cluster();
 }, meas_period);
 
 // Time update loop

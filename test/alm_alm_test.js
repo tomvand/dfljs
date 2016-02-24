@@ -39,6 +39,18 @@ describe('ALM particle filter', function () {
                 assert(particle.state.y <= initInfo.ymax);
             });
         });
+
+        it('assigns particles to clusters', function () {
+            var alm = new Alm(2, Nparticles, initInfo, bounds);
+
+            var detect0 = false;
+            var detect1 = false;
+            alm.particles.forEach(function (particle) {
+                detect0 = detect0 || particle.cluster === 0;
+                detect1 = detect1 || particle.cluster === 1;
+            });
+            assert(detect0 && detect1);
+        });
     });
 
     describe('.predict(deltaT)', function () {
@@ -92,6 +104,28 @@ describe('ALM particle filter', function () {
 
         it('resamples the same number of particles', function () {
             assert.equal(alm.particles.length, Ntargets * Nparticles);
+        });
+    });
+
+    describe('.cluster()', function () {
+        it('does not crash', function () {
+            var alm = new Alm(2, Nparticles, initInfo, bounds);
+            for (var i = 0; i < 100; i++) {
+                alm.cluster();
+            }
+        });
+        it('assigns particles to clusters', function () {
+            var alm = new Alm(2, Nparticles, initInfo, bounds);
+            alm.cluster();
+
+            var detect = [0, 0];
+            alm.particles.forEach(function (particle) {
+                detect[particle.cluster]++;
+            });
+            assert(detect[0] > 0);
+            assert(detect[1] > 0);
+            console.log(detect[0]);
+            console.log(detect[1]);
         });
     });
 });

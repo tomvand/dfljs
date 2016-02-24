@@ -121,7 +121,7 @@ function draw(state) {
     // Draw the current state of the simulation.
     state.measurements.forEach(drawMeasurement);
     state.beacons.forEach(drawBeacon);
-    state.actors.forEach(drawActor);
+    drawActors(state.actors);
 }
 
 function drawBeacon(beacon) {
@@ -140,20 +140,22 @@ function drawBeacon(beacon) {
     ctx.fillText(beacon.address, pos.x, pos.y);
 }
 
-function drawActor(actor) {
-    var pos = world_coordinates.transform(actor.x, actor.y);
-    var r = world_coordinates.transform(0.30);
-    ctx.fillStyle = '#0000FF';
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
-    ctx.fill();
+function drawActors(actors) {
+    actors.forEach(function (actor, index) {
+        var pos = world_coordinates.transform(actor.x, actor.y);
+        var r = world_coordinates.transform(0.30);
+        ctx.fillStyle = 'hsl(' + index / actors.length * 360.0 + ',100%,50%)';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
+        ctx.fill();
 
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    ctx.lineTo(pos.x + r * Math.cos(actor.direction), pos.y - r * Math.sin(actor.direction));
-    ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(pos.x + r * Math.cos(actor.direction), pos.y - r * Math.sin(actor.direction));
+        ctx.stroke();
+    });
 }
 
 function ellipse(phase, x, y, angle, major_axis, minor_axis) {
@@ -180,7 +182,7 @@ function drawMeasurement(measurement) {
     var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
 
     var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
-    ctx.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+    ctx.fillStyle = 'rgba(0, 0, 0, ' + alpha + ')';
     ctx.beginPath();
     var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
     ctx.moveTo(pos.x, pos.y);
@@ -211,11 +213,18 @@ function drawAlm(alm) {
     ctx.strokeRect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y);
 
     alm.particles.forEach(function (particle) {
-//        var size = 5.0;
         var size = 5.0 * alm.particles.length * particle.weight;
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = '#990099';
-        ctx.rect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
-        ctx.fill();
+        ctx.fillStyle = 'hsl(' + particle.cluster / alm.Ntargets * 360.0 + ',50%,50%)';
+        ctx.fillRect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
+    });
+
+    alm.clusters.forEach(function (cluster, index) {
+        var pos = world_coordinates.transform(cluster.value.x, cluster.value.y);
+        var r = world_coordinates.transform(0.30);
+        ctx.strokeStyle = 'hsl(' + index / alm.clusters.length * 360.0 + ',100%,50%)';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
+        ctx.stroke();
     });
 }
