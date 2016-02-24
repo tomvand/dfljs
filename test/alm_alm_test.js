@@ -17,11 +17,18 @@ describe('ALM particle filter', function () {
         ymax: 4
     };
 
+    var bounds = {
+        xmin: -10,
+        xmax: 10,
+        ymin: -10,
+        ymax: 10
+    };
+
     var deltaT = 0.1;
 
     describe('constructor', function () {
         it('initializes particles', function () {
-            var alm = new Alm(Ntargets, Nparticles, initInfo);
+            var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
             assert.equal(alm.particles.length, Ntargets * Nparticles);
             assert(alm.particles[0]);
@@ -35,7 +42,7 @@ describe('ALM particle filter', function () {
     });
 
     describe('.predict(deltaT)', function () {
-        var alm = new Alm(Ntargets, Nparticles, initInfo);
+        var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
         it('particles keep a valid state', function () {
             alm.particles.forEach(function (particle) {
@@ -51,7 +58,7 @@ describe('ALM particle filter', function () {
     });
 
     describe('.observe(observations)', function () {
-        var alm = new Alm(Ntargets, Nparticles, initInfo);
+        var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
         var beacons = [
             {x: -4.0, y: 0.0},

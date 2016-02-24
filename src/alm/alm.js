@@ -6,14 +6,15 @@ var State = require('../model/state.js');
 var observation = require('../model/observation.js');
 
 var mathjs = require('mathjs');
-var normpdf = require('../util/normpdf.js');
 
 var clone = require('clone');
 
-function AlmFilter(Ntargets, Nparticles, initInfo) {
+function AlmFilter(Ntargets, Nparticles, initInfo, bounds) {
     this.Ntargets = Ntargets;
     this.Nparticles = Nparticles;
     this.initializeParticles(initInfo);
+
+    this.bounds = bounds;
 }
 
 AlmFilter.prototype.initializeParticles = function (initInfo) {
@@ -73,11 +74,16 @@ AlmFilter.prototype.observe = function (observations) {
 
     var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
     var invSigma = mathjs.inv(Sigma);
+    var bounds = this.bounds;
 
     var pzk = approx_normpdf(zk, muhat_k, invSigma);
     this.particles.forEach(function (particle) {
-        var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
-        particle.weight /= Fk;
+        if (inBounds(particle.state, bounds)) {
+            var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
+            particle.weight /= Fk;
+        } else {
+            particle.weight = 0.0;
+        }
     });
 
     // Normalize
@@ -131,5 +137,12 @@ AlmFilter.prototype.resample = function () {
 function approx_normpdf(x, mu, invSigma) {
     var e = mathjs.subtract(x, mu);
     return Math.exp(mathjs.multiply(-0.5, mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
+}
+
+function inBounds(state, bounds) {
+    return state.x >= bounds.xmin &&
+            state.x <= bounds.xmax &&
+            state.y >= bounds.ymin &&
+            state.y <= bounds.ymax;
 }
 

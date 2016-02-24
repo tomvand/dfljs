@@ -204,10 +204,17 @@ function drawMeasurement(measurement) {
 }
 
 function drawAlm(alm) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#000000';
+    var topleft = world_coordinates.transform(alm.bounds.xmin, alm.bounds.ymin);
+    var bottomright = world_coordinates.transform(alm.bounds.xmax, alm.bounds.ymax);
+    ctx.strokeRect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y);
+
     alm.particles.forEach(function (particle) {
-        var size = 5.0;
+//        var size = 5.0;
+        var size = 5.0 * alm.particles.length * particle.weight;
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = 'blue';
+        ctx.fillStyle = '#990099';
         ctx.rect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
         ctx.fill();
     });

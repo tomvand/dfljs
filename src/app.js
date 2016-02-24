@@ -27,7 +27,14 @@ var initInfo = {
     ymin: -3.0,
     ymax: 3.0
 };
-var alm = new Alm(Ntargets, Nparticles, initInfo);
+var bounds = {
+    xmin: -5.0,
+    xmax: 2.0,
+    ymin: -3.0,
+    ymax: 3.0
+};
+
+var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
 var state = {
     beacons: beacons,
@@ -38,7 +45,7 @@ document.onkeydown = keyboard.onKeyPress;
 keyboard.posess(actor);
 
 draw.attach(document.getElementById('canvas'));
-draw.setView(-8.0, -4.0, 12.0, 8.0);
+draw.setView(-6.0, -4.0, 9.0, 8.0);
 
 
 setInterval(function () {
