@@ -71,9 +71,12 @@ AlmFilter.prototype.observe = function (observations) {
     });
     zk = mathjs.transpose(mathjs.matrix([zk]));
 
-    var pzk = normpdf(zk, muhat_k, mathjs.add(Sigmahat_k, Sigma_z));
+    var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
+    var invSigma = mathjs.inv(Sigma);
+
+    var pzk = approx_normpdf(zk, muhat_k, invSigma);
     this.particles.forEach(function (particle) {
-        var Fk = pzk / normpdf(zk, mathjs.add(gx(particle.state), muhat_k), mathjs.add(Sigmahat_k, Sigma_z));
+        var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
         particle.weight /= Fk;
     });
 
@@ -124,4 +127,9 @@ AlmFilter.prototype.resample = function () {
     }
     this.particles = new_particles;
 };
+
+function approx_normpdf(x, mu, invSigma) {
+    var e = mathjs.subtract(x, mu);
+    return Math.exp(mathjs.multiply(-0.5, mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
+}
 
