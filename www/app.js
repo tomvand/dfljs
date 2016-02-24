@@ -51058,6 +51058,8 @@ function AlmFilter(Ntargets, Nparticles, initInfo, bounds) {
     this.initializeParticles(initInfo);
 
     this.bounds = bounds;
+
+    this.clusters = [];
 }
 
 AlmFilter.prototype.initializeParticles = function (initInfo) {
@@ -51065,7 +51067,8 @@ AlmFilter.prototype.initializeParticles = function (initInfo) {
     for (var i = 0; i < this.Ntargets * this.Nparticles; i++) {
         this.particles.push({
             state: new State(initInfo),
-            weight: 1 / (this.Ntargets * this.Nparticles)
+            weight: 1 / (this.Ntargets * this.Nparticles),
+            cluster: Math.floor(Math.random() * this.Ntargets)
         });
     }
 };
@@ -51177,6 +51180,56 @@ AlmFilter.prototype.resample = function () {
     this.particles = new_particles;
 };
 
+AlmFilter.prototype.cluster = function () {
+    // Apply k-means clustering
+    var clusters = [];
+    var iterations = 100;
+    do {
+        var converged = true;
+        // Initialize clusters
+        clusters = [];
+        for (var i = 0; i < this.Ntargets; i++) {
+            var initial = Math.floor(Math.random() * this.particles.length);
+            clusters[i] = {
+                value: {
+                    x: this.particles[initial].state.x,
+                    y: this.particles[initial].state.y
+                },
+                weight: 0.0
+            };
+        }
+        // Find the current means
+        var Ntargets = this.Ntargets;
+        this.particles.forEach(function (particle) {
+            particle.cluster = (particle.cluster < Ntargets) ? particle.cluster : 0;
+            var c = clusters[particle.cluster];
+            c.value.x = (c.value.x * c.weight + particle.state.x * particle.weight) / (c.weight + particle.weight);
+            c.value.y = (c.value.y * c.weight + particle.state.y * particle.weight) / (c.weight + particle.weight);
+            c.weight = c.weight + particle.weight;
+        });
+        // Reassign
+        this.particles.forEach(function (particle) {
+            var shortest_dist2 = Number.POSITIVE_INFINITY;
+            var nearest_cluster = 0;
+            clusters.forEach(function (cluster, index) {
+                var dx = particle.state.x - cluster.value.x;
+                var dy = particle.state.y - cluster.value.y;
+                var dist2 = dx * dx + dy * dy;
+                if (dist2 < shortest_dist2) {
+                    shortest_dist2 = dist2;
+                    nearest_cluster = index;
+                }
+            });
+            if (particle.cluster !== nearest_cluster) {
+                particle.cluster = nearest_cluster;
+                converged = false;
+            }
+        });
+        iterations--;
+    } while (!converged && iterations > 0);
+    this.clusters = clusters;
+};
+
 function approx_normpdf(x, mu, invSigma) {
     var e = mathjs.subtract(x, mu);
     return Math.exp(mathjs.multiply(-0.5, mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
@@ -51224,7 +51277,7 @@ var stationary = new Actor(6.0, 3.0, Math.PI);
 var actors = [actor, stationary];
 
 var Ntargets = 2;
-var Nparticles = 50;
+var Nparticles = 100;
 var initInfo = {
     xmin: 0.0,
     xmax: 8.20,
@@ -51272,6 +51325,7 @@ setInterval(function () {
     });
     // Update ALM filter
     alm.observe(state.measurements);
+    alm.cluster();
 }, meas_period);
 
 // Time update loop
@@ -51514,7 +51568,7 @@ function draw(state) {
     // Draw the current state of the simulation.
     state.measurements.forEach(drawMeasurement);
     state.beacons.forEach(drawBeacon);
-    state.actors.forEach(drawActor);
+    drawActors(state.actors);
 }
 
 function drawBeacon(beacon) {
@@ -51533,20 +51587,22 @@ function drawBeacon(beacon) {
     ctx.fillText(beacon.address, pos.x, pos.y);
 }
 
-function drawActor(actor) {
-    var pos = world_coordinates.transform(actor.x, actor.y);
-    var r = world_coordinates.transform(0.30);
-    ctx.fillStyle = '#0000FF';
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
-    ctx.fill();
+function drawActors(actors) {
+    actors.forEach(function (actor, index) {
+        var pos = world_coordinates.transform(actor.x, actor.y);
+        var r = world_coordinates.transform(0.30);
+        ctx.fillStyle = 'hsl(' + index / actors.length * 360.0 + ',100%,50%)';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
+        ctx.fill();
 
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    ctx.lineTo(pos.x + r * Math.cos(actor.direction), pos.y - r * Math.sin(actor.direction));
-    ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(pos.x + r * Math.cos(actor.direction), pos.y - r * Math.sin(actor.direction));
+        ctx.stroke();
+    });
 }
 
 function ellipse(phase, x, y, angle, major_axis, minor_axis) {
@@ -51573,7 +51629,7 @@ function drawMeasurement(measurement) {
     var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
 
     var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
-    ctx.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+    ctx.fillStyle = 'rgba(0, 0, 0, ' + alpha + ')';
     ctx.beginPath();
     var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
     ctx.moveTo(pos.x, pos.y);
@@ -51604,12 +51660,19 @@ function drawAlm(alm) {
     ctx.strokeRect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y);
 
     alm.particles.forEach(function (particle) {
-//        var size = 5.0;
         var size = 5.0 * alm.particles.length * particle.weight;
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = '#990099';
-        ctx.rect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
-        ctx.fill();
+        ctx.fillStyle = 'hsl(' + particle.cluster / alm.Ntargets * 360.0 + ',50%,50%)';
+        ctx.fillRect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
+    });
+
+    alm.clusters.forEach(function (cluster, index) {
+        var pos = world_coordinates.transform(cluster.value.x, cluster.value.y);
+        var r = world_coordinates.transform(0.30);
+        ctx.strokeStyle = 'hsl(' + index / alm.clusters.length * 360.0 + ',100%,50%)';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
+        ctx.stroke();
     });
 }
 

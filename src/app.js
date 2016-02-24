@@ -31,7 +31,7 @@ var stationary = new Actor(6.0, 3.0, Math.PI);
 var actors = [actor, stationary];
 
 var Ntargets = 2;
-var Nparticles = 50;
+var Nparticles = 100;
 var initInfo = {
     xmin: 0.0,
     xmax: 8.20,
@@ -79,6 +79,7 @@ setInterval(function () {
     });
     // Update ALM filter
     alm.observe(state.measurements);
+    alm.cluster();
 }, meas_period);
 
 // Time update loop
