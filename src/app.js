@@ -31,7 +31,7 @@ var stationary = new Actor(6.0, 3.0, Math.PI);
 var actors = [actor, stationary];
 
 var Ntargets = 2;
-var Nparticles = 100;
+var Nparticles = 101;
 var initInfo = {
     xmin: 0.0,
     xmax: 8.20,
