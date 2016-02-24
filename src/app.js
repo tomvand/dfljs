@@ -38,7 +38,8 @@ var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
 var state = {
     beacons: beacons,
-    actors: actors
+    actors: actors,
+    measurements: []
 };
 
 document.onkeydown = keyboard.onKeyPress;
@@ -48,6 +49,8 @@ draw.attach(document.getElementById('canvas'));
 draw.setView(-6.0, -4.0, 9.0, 8.0);
 
 
+// Measurement loop
+var meas_period = 1000;
 setInterval(function () {
     // Update measurements
     state.measurements = [];
@@ -58,11 +61,16 @@ setInterval(function () {
             }
         });
     });
+    // Update ALM filter
+    alm.observe(state.measurements);
+}, meas_period);
 
+// Time update loop
+var time_period = 100;
+setInterval(function () {
     // Draw the current state
     draw.draw(state);
     draw.drawAlm(alm);
-    // Update filter
-    alm.predict(0.100);
-    alm.observe(state.measurements);
-}, 100);
+    // Update the ALM filter
+    alm.predict(time_period / 1000.0);
+}, time_period);

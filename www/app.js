@@ -51231,7 +51231,8 @@ var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
 var state = {
     beacons: beacons,
-    actors: actors
+    actors: actors,
+    measurements: []
 };
 
 document.onkeydown = keyboard.onKeyPress;
@@ -51241,6 +51242,8 @@ draw.attach(document.getElementById('canvas'));
 draw.setView(-6.0, -4.0, 9.0, 8.0);
 
 
+// Measurement loop
+var meas_period = 1000;
 setInterval(function () {
     // Update measurements
     state.measurements = [];
@@ -51251,14 +51254,20 @@ setInterval(function () {
             }
         });
     });
+    // Update ALM filter
+    alm.observe(state.measurements);
+}, meas_period);
 
+// Time update loop
+var time_period = 100;
+setInterval(function () {
     // Draw the current state
     draw.draw(state);
     draw.drawAlm(alm);
-    // Update filter
-    alm.predict(0.100);
-    alm.observe(state.measurements);
-}, 100);
+    // Update the ALM filter
+    alm.predict(time_period / 1000.0);
+}, time_period);
+
 },{"./alm/alm.js":502,"./sim/actor.js":506,"./sim/beacon.js":507,"./sim/draw.js":508,"./sim/keyboardcontroller.js":509,"./sim/measure.js":510}],504:[function(require,module,exports){
 var params = {
     phi: -5.0,
@@ -51317,8 +51326,8 @@ State.prototype.initialize = function (initInfo) {
 };
 
 State.prototype.predict = function (deltaT) {
-    var vx = 2.0 * randn();
-    var vy = 2.0 * randn();
+    var vx = 1.0 * randn();
+    var vy = 1.0 * randn();
 
     this.x += vx * deltaT;
     this.y += vy * deltaT;

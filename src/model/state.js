@@ -15,8 +15,8 @@ State.prototype.initialize = function (initInfo) {
 };
 
 State.prototype.predict = function (deltaT) {
-    var vx = 2.0 * randn();
-    var vy = 2.0 * randn();
+    var vx = 1.0 * randn();
+    var vy = 1.0 * randn();
 
     this.x += vx * deltaT;
     this.y += vy * deltaT;
