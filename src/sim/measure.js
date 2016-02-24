@@ -1,3 +1,5 @@
+var randn = require('../util/randn.js');
+
 exports.measure = measure;
 
 /**
@@ -6,7 +8,8 @@ exports.measure = measure;
  */
 var params = {
     phi: -5.0,
-    sigma_l: 0.2
+    sigma_l: 0.2,
+    sigma_z: 1.0
 };
 exports.params = params;
 
@@ -30,6 +33,7 @@ function measure(receiver, transmitter, actors) {
     actors.forEach(function (actor) {
         delta_rssi += params.phi * Math.exp(-lambda(receiver, transmitter, actor) / params.sigma_l);
     });
+    delta_rssi += params.sigma_z * randn()
     return {
         receiver: receiver,
         transmitter: transmitter,

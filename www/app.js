@@ -51248,19 +51248,24 @@ draw.setView(-1.0, -13.40, 10.20, 14.40);
 
 
 // Measurement loop
+var meas_probability = 0.80;
 var meas_period = 1000;
 setInterval(function () {
     // Update measurements
     state.measurements = [];
     tx_only.forEach(function (transmitter) {
         beacons.forEach(function (receiver) {
-            state.measurements.push(measure.measure(receiver, transmitter, actors));
+            if (Math.random() <= meas_probability) {
+                state.measurements.push(measure.measure(receiver, transmitter, actors));
+            }
         });
     });
     beacons.forEach(function (receiver) {
         beacons.forEach(function (transmitter) {
             if (receiver !== transmitter) {
-                state.measurements.push(measure.measure(receiver, transmitter, actors));
+                if (Math.random() <= meas_probability) {
+                    state.measurements.push(measure.measure(receiver, transmitter, actors));
+                }
             }
         });
     });
@@ -51656,6 +51661,8 @@ function onKeyPress(event) {
     }
 }
 },{}],510:[function(require,module,exports){
+var randn = require('../util/randn.js');
+
 exports.measure = measure;
 
 /**
@@ -51664,7 +51671,8 @@ exports.measure = measure;
  */
 var params = {
     phi: -5.0,
-    sigma_l: 0.2
+    sigma_l: 0.2,
+    sigma_z: 1.0
 };
 exports.params = params;
 
@@ -51688,6 +51696,7 @@ function measure(receiver, transmitter, actors) {
     actors.forEach(function (actor) {
         delta_rssi += params.phi * Math.exp(-lambda(receiver, transmitter, actor) / params.sigma_l);
     });
+    delta_rssi += params.sigma_z * randn()
     return {
         receiver: receiver,
         transmitter: transmitter,
@@ -51702,7 +51711,7 @@ function distance(x1, y1, x2, y2) {
 function lambda(from, to, actor) {
     return distance(from.x, from.y, actor.x, actor.y) + distance(to.x, to.y, actor.x, actor.y) - distance(from.x, from.y, to.x, to.y);
 }
-},{}],511:[function(require,module,exports){
+},{"../util/randn.js":511}],511:[function(require,module,exports){
 // The code in this file is copied from
 // http://www.meredithdodge.com/2012/05/30/a-great-little-javascript-function-for-generating-random-gaussiannormalbell-curve-numbers/
 // The original source (Colin Godsey) is no longer available.

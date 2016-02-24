@@ -55,19 +55,24 @@ draw.setView(-1.0, -13.40, 10.20, 14.40);
 
 
 // Measurement loop
+var meas_probability = 0.80;
 var meas_period = 1000;
 setInterval(function () {
     // Update measurements
     state.measurements = [];
     tx_only.forEach(function (transmitter) {
         beacons.forEach(function (receiver) {
-            state.measurements.push(measure.measure(receiver, transmitter, actors));
+            if (Math.random() <= meas_probability) {
+                state.measurements.push(measure.measure(receiver, transmitter, actors));
+            }
         });
     });
     beacons.forEach(function (receiver) {
         beacons.forEach(function (transmitter) {
             if (receiver !== transmitter) {
-                state.measurements.push(measure.measure(receiver, transmitter, actors));
+                if (Math.random() <= meas_probability) {
+                    state.measurements.push(measure.measure(receiver, transmitter, actors));
+                }
             }
         });
     });
