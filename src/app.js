@@ -26,10 +26,11 @@ var beacons = [
 ];
 var all_beacons = tx_only.concat(beacons);
 
-var actor = new Actor(0.0, 0.0, 0.0);
-var actors = [actor];
+var actor = new Actor(2.0, 5.0, 0.0);
+var stationary = new Actor(6.0, 3.0, Math.PI);
+var actors = [actor, stationary];
 
-var Ntargets = 1;
+var Ntargets = 2;
 var Nparticles = 50;
 var initInfo = {
     xmin: 0.0,
