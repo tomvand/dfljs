@@ -1,3 +1,6 @@
+var replay = require('./replay/replay.js');
+replay.open(log);
+
 var Beacon = require('./sim/beacon.js');
 var Actor = require('./sim/actor.js');
 var measure = require('./sim/measure.js');
@@ -60,23 +63,8 @@ var meas_probability = 0.80;
 var meas_period = 1000;
 setInterval(function () {
     // Update measurements
-    state.measurements = [];
-    tx_only.forEach(function (transmitter) {
-        beacons.forEach(function (receiver) {
-            if (Math.random() <= meas_probability) {
-                state.measurements.push(measure.measure(receiver, transmitter, actors));
-            }
-        });
-    });
-    beacons.forEach(function (receiver) {
-        beacons.forEach(function (transmitter) {
-            if (receiver !== transmitter) {
-                if (Math.random() <= meas_probability) {
-                    state.measurements.push(measure.measure(receiver, transmitter, actors));
-                }
-            }
-        });
-    });
+    state.measurements = replay.getMeasurements(all_beacons);
+    document.getElementById('clock').innerHTML = new Date(replay.getCurrentTime() * 1000);
     // Update ALM filter
     alm.observe(state.measurements);
     alm.cluster();
