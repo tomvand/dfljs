@@ -10,6 +10,7 @@ module.exports = RunningVariance;
 
 function RunningVariance(window) {
     this._window = window;
+    this._remainingInitialSamples = window;
 
     this._psa = 0.0;
     this._sma = 0.0;
@@ -26,6 +27,10 @@ RunningVariance.prototype.filter = function (value) {
 
     this._sma += (value - old) / this._window;
     this._psa += (value * value - old * old) / this._window;
+
+    if (this._remainingInitialSamples > 0) {
+        this._remainingInitialSamples--;
+    }
 };
 
 RunningVariance.prototype.variance = function () {
@@ -34,4 +39,8 @@ RunningVariance.prototype.variance = function () {
 
 RunningVariance.prototype.average = function () {
     return this._sma;
+};
+
+RunningVariance.prototype.isInitialized = function () {
+    return this._remainingInitialSamples === 0;
 };
