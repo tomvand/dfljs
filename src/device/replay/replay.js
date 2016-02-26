@@ -1,5 +1,11 @@
+/**
+ * The device/replay module collects data from a log object specified using
+ * open(), and transforms this into RSSI data that can be used by the filter
+ * to provide data for the tracking algorithm.
+ * @module
+ */
+
 "use strict";
-/* global log - log object loaded by index.html*/
 
 module.exports.open = open;
 module.exports.getMeasurements = getMeasurements;

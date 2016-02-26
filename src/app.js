@@ -1,4 +1,4 @@
-var replay = require('./replay/replay.js');
+var replay = require('./device/replay/replay.js');
 replay.open(log);
 
 var Beacon = require('./sim/beacon.js');
