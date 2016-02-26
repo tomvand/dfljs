@@ -8,7 +8,7 @@ describe('RunningVariance', function () {
     var average = -70.0;
     var variance = 5.0;
 
-    var numSamples = 500;
+    var numSamples = 100;
     var samples = [];
     for (var i = 0; i < numSamples; i++) {
         samples.push(Math.sqrt(variance) * randn() + average);
@@ -33,7 +33,7 @@ describe('RunningVariance', function () {
 
     describe('.variance()', function () {
         it('estimates the variance', function () {
-            assert(Math.abs(runVar.variance() - variance) < 0.5);
+            assert(Math.abs(runVar.variance() - variance) < 1.5);
         });
     });
 
