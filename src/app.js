@@ -1,6 +1,8 @@
 var replay = require('./device/replay/replay.js');
 replay.open(log);
 
+var rssifilter = require('./device/filter.js');
+
 var Beacon = require('./sim/beacon.js');
 var Actor = require('./sim/actor.js');
 var measure = require('./sim/measure.js');
@@ -33,8 +35,8 @@ var actor = new Actor(2.0, 5.0, 0.0);
 var stationary = new Actor(6.0, 3.0, Math.PI);
 var actors = [actor, stationary];
 
-var Ntargets = 2;
-var Nparticles = 101;
+var Ntargets = 5;
+var Nparticles = 100;
 var initInfo = {
     xmin: 0.0,
     xmax: 8.20,
@@ -47,7 +49,8 @@ var alm = new Alm(Ntargets, Nparticles, initInfo, bounds);
 
 var state = {
     beacons: all_beacons,
-    actors: actors,
+//    actors: actors,
+    actors: [],
     measurements: []
 };
 
@@ -58,12 +61,22 @@ draw.attach(document.getElementById('canvas'));
 draw.setView(-1.0, -13.40, 10.20, 14.40);
 
 
+function loadMeasurements() {
+    var link_measurements = replay.getMeasurements(all_beacons);
+    state.measurements = rssifilter.filter(link_measurements, all_beacons);
+}
+
+while (!state.measurements.length) {
+    loadMeasurements();
+}
+
+
 // Measurement loop
 var meas_probability = 0.80;
 var meas_period = 1000;
 setInterval(function () {
     // Update measurements
-    state.measurements = replay.getMeasurements(all_beacons);
+    loadMeasurements();
     document.getElementById('clock').innerHTML = new Date(replay.getCurrentTime() * 1000);
     // Update ALM filter
     alm.observe(state.measurements);

@@ -172,8 +172,8 @@ function distance(x1, y1, x2, y2) {
 }
 
 function drawMeasurement(measurement) {
-    var rx = world_coordinates.transform(measurement.receiver.x, measurement.receiver.y);
-    var tx = world_coordinates.transform(measurement.transmitter.x, measurement.transmitter.y);
+    var rx = world_coordinates.transform(measurement.beacons[0].x, measurement.beacons[0].y);
+    var tx = world_coordinates.transform(measurement.beacons[1].x, measurement.beacons[1].y);
 
     var x = 0.5 * (rx.x + tx.x);
     var y = 0.5 * (rx.y + tx.y);
@@ -181,8 +181,9 @@ function drawMeasurement(measurement) {
     var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 4 * world_coordinates.transform(measure.params.sigma_l);
     var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
 
-    var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / measure.params.phi));
-    ctx.fillStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+    var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / (5 * measure.params.phi)));
+    var red = measurement.isBlocked ? 255 : 0;
+    ctx.fillStyle = 'rgba(' + red + ', 0, 0, ' + alpha + ')';
     ctx.beginPath();
     var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
     ctx.moveTo(pos.x, pos.y);

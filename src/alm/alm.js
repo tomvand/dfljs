@@ -39,8 +39,7 @@ AlmFilter.prototype.predict = function (deltaT) {
 /**
  *
  * @param {object[]} observations
- *  @property {Beacon} receiver - beacon that received this measurement
- *  @property {Beacon} transmitter - beacon that transmitted the advertisement
+ *  @property {Beacon[]} beacons - beacon that describe this link
  *  @property {number} delta_rssi - change in RSSI on this link
  */
 AlmFilter.prototype.observe = function (observations) {
@@ -49,10 +48,14 @@ AlmFilter.prototype.observe = function (observations) {
      * @param {State} x - state considered for this observation
      * @returns {Array} - array of expected change in RSSI
      */
+    if (observations.length <= 0) {
+        return;
+    }
+
     var gx = function (x) {
         var g = [];
         observations.forEach(function (obs) {
-            g.push(observation.observe(obs.receiver, obs.transmitter, x));
+            g.push(observation.observe(obs.beacons[0], obs.beacons[1], x));
         });
         return mathjs.transpose(mathjs.matrix([g]));
     };

@@ -13,7 +13,7 @@ module.exports.filter = filter;
 
 var settings = {
     backgroundWindow: 60,
-    r: 1.0
+    r: 2.0
 };
 module.exports.settings = settings;
 
@@ -23,32 +23,8 @@ var link_filters = [];
 
 // beacons: [{receiver, transmitter, rssi}]
 function filter(rssiData, modelBeacons) {
-    var observations = [];
-
     var linkRSSI = getAverageLinkRSSI(rssiData, modelBeacons);
-
-    linkRSSI.forEach(function (link) {
-        if (!link_filters[link.name]) {
-            link_filters[link.name] = new RunVar(settings.backgroundWindow);
-        }
-        var filter = link_filters[link.name];
-
-        if (!filter.isInitialized()) {
-            filter.filter(link.rssi);
-            return;
-        } else {
-            if (link.rssi > filter.average() - settings.r * Math.sqrt(filter.variance())) {
-                // Update the filter if this is not an outlier.
-                filter.filter(link.rssi);
-            }
-            observations.push({
-                beacons: link.beacons,
-                delta_rssi: link.rssi - filter.average()
-            });
-        }
-    });
-
-    return observations;
+    return subtractBackground(linkRSSI);
 }
 
 function getAverageLinkRSSI(rssiData, modelBeacons) {
@@ -87,6 +63,34 @@ function getAverageLinkRSSI(rssiData, modelBeacons) {
     });
 
     return link_observations;
+}
+
+function subtractBackground(linkRSSI) {
+    var observations = [];
+    linkRSSI.forEach(function (link) {
+        if (!link_filters[link.name]) {
+            link_filters[link.name] = new RunVar(settings.backgroundWindow);
+        }
+        var filter = link_filters[link.name];
+
+        if (!filter.isInitialized()) {
+            filter.filter(link.rssi);
+            return;
+        } else {
+            var isBlocked = true;
+            if (link.rssi > filter.average() - settings.r * Math.sqrt(filter.variance())) {
+                // Update the filter if this is not an outlier.
+                filter.filter(link.rssi);
+                isBlocked = false;
+            }
+            observations.push({
+                beacons: link.beacons,
+                delta_rssi: link.rssi - filter.average(),
+                isBlocked: isBlocked
+            });
+        }
+    });
+    return observations;
 }
 
 function getBeaconByAddress(beacons, address) {

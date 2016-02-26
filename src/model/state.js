@@ -6,6 +6,7 @@ function State(initInfo) {
     this.x = 0.0;
     this.y = 0.0;
 
+    this.initInfo = initInfo;
     this.initialize(initInfo);
 }
 
@@ -20,4 +21,15 @@ State.prototype.predict = function (deltaT) {
 
     this.x += vx * deltaT;
     this.y += vy * deltaT;
+
+    if (this._outOfBounds()) {
+        this.initialize(this.initInfo);
+    }
+};
+
+State.prototype._outOfBounds = function () {
+    return  this.x < this.initInfo.xmin ||
+            this.x > this.initInfo.xmax ||
+            this.y < this.initInfo.ymin ||
+            this.y > this.initInfo.ymax;
 };

@@ -34,35 +34,14 @@ function getMeasurements(beacons) {
     }
 
     var now = log.data[currentTime.toString() + '.0'];
-    var measurements = []; // Array of {receiver, transmitter, delta_rssi}
+    var measurements = []; // Array of {receiver, transmitter, rssi}
 
     for (var rxAddress in now) {
-        var rxBeacon = getBeaconByAddress(beacons, rxAddress);
-        if (!rxBeacon) {
-            // console.log("Can't find beacon " + rxAddress);
-            continue;
-        }
-
         for (var txAddress in now[rxAddress]) {
-            var txBeacon = getBeaconByAddress(beacons, txAddress);
-            if (!txBeacon) {
-                // console.log("Can't find beacon " + txAddress);
-                continue;
-            }
-
-            var delta_rssi = 0.0;
-            now[rxAddress][txAddress].forEach(function (delta) {
-                delta_rssi += Number(delta);
-            });
-            delta_rssi /= now[rxAddress][txAddress].length;
-
-            // TODO remove
-            delta_rssi += 70.0;
-
             measurements.push({
-                receiver: rxBeacon,
-                transmitter: txBeacon,
-                delta_rssi: delta_rssi
+                receiver: rxAddress,
+                transmitter: txAddress,
+                rssi: now[rxAddress][txAddress]
             });
         }
     }
@@ -70,11 +49,4 @@ function getMeasurements(beacons) {
     currentTime++;
 
     return measurements;
-}
-
-function getBeaconByAddress(beacons, address) {
-    var b = beacons.filter(function (b) {
-        return b.address.toLowerCase() === address.toLowerCase();
-    });
-    return b[0];
 }
