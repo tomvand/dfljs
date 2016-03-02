@@ -51,49 +51,42 @@ AlmFilter.prototype.predict = function (deltaT) {
  *  @property {number} delta_rssi - change in RSSI on this link
  */
 AlmFilter.prototype.observe = function (observations) {
-    /**
-     *
-     * @param {State} x - state considered for this observation
-     * @returns {Array} - array of expected change in RSSI
-     */
-    if (observations.length <= 0) {
-        return;
-    }
+    if (observations.length > 0) {
+        var gx = function (x) {
+            var g = [];
+            observations.forEach(function (obs) {
+                g.push(observation.observe(obs.beacons[0], obs.beacons[1], x));
+            });
+            return mathjs.transpose(mathjs.matrix([g]));
+        };
 
-    var gx = function (x) {
-        var g = [];
-        observations.forEach(function (obs) {
-            g.push(observation.observe(obs.beacons[0], obs.beacons[1], x));
+        var muhat_k = 0;
+        var Sigmahat_k = 0;
+        this.particles.forEach(function (particle) {
+            var gxj = gx(particle.state);
+            muhat_k = mathjs.add(muhat_k, mathjs.multiply(particle.weight, gxj));
+            var Sigmahat_k_j = mathjs.multiply(gxj, mathjs.transpose(gxj));
+            Sigmahat_k = mathjs.add(Sigmahat_k, mathjs.multiply(particle.weight, Sigmahat_k_j));
         });
-        return mathjs.transpose(mathjs.matrix([g]));
-    };
-
-    var muhat_k = 0;
-    var Sigmahat_k = 0;
-    this.particles.forEach(function (particle) {
-        var gxj = gx(particle.state);
-        muhat_k = mathjs.add(muhat_k, mathjs.multiply(particle.weight, gxj));
-        var Sigmahat_k_j = mathjs.multiply(gxj, mathjs.transpose(gxj));
-        Sigmahat_k = mathjs.add(Sigmahat_k, mathjs.multiply(particle.weight, Sigmahat_k_j));
-    });
 
 
-    // Weight update
-    var Sigma_z = mathjs.multiply(observation.params.sigma_z, mathjs.eye(observations.length));
-    var zk = [];
-    observations.forEach(function (obs) {
-        zk.push(obs.delta_rssi);
-    });
-    zk = mathjs.transpose(mathjs.matrix([zk]));
+        // Weight update
+        var Sigma_z = mathjs.multiply(observation.params.sigma_z, mathjs.eye(observations.length));
+        var zk = [];
+        observations.forEach(function (obs) {
+            zk.push(obs.delta_rssi);
+        });
+        zk = mathjs.transpose(mathjs.matrix([zk]));
 
-    var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
-    var invSigma = mathjs.inv(Sigma);
+        var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
+        var invSigma = mathjs.inv(Sigma);
 
-    var pzk = approx_normpdf(zk, muhat_k, invSigma);
-    this.particles.forEach(function (particle) {
-        var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
-        particle.weight /= Fk;
-    });
+        var pzk = approx_normpdf(zk, muhat_k, invSigma);
+        this.particles.forEach(function (particle) {
+            var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
+            particle.weight /= Fk;
+        });
+    }
 
     // Normalize
     this.normalize();
