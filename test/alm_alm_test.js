@@ -127,5 +127,12 @@ describe('ALM particle filter', function () {
             console.log(detect[0]);
             console.log(detect[1]);
         });
+        it('reports cluster means', function () {
+            var alm = new Alm(2, Nparticles, initInfo, bounds);
+            alm.cluster();
+
+            assert.ok(alm.clusters[0].value.x);
+            assert.ok(alm.clusters[0].value.y);
+        });
     });
 });

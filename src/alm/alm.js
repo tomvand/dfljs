@@ -163,9 +163,11 @@ AlmFilter.prototype.cluster = function () {
         this.particles.forEach(function (particle) {
             particle.cluster = (particle.cluster < Ntargets) ? particle.cluster : 0;
             var c = clusters[particle.cluster];
-            c.value.x = (c.value.x * c.weight + particle.state.x * particle.weight) / (c.weight + particle.weight);
-            c.value.y = (c.value.y * c.weight + particle.state.y * particle.weight) / (c.weight + particle.weight);
-            c.weight = c.weight + particle.weight;
+            if (c.weight + particle.weight > 0) {
+                c.value.x = (c.value.x * c.weight + particle.state.x * particle.weight) / (c.weight + particle.weight);
+                c.value.y = (c.value.y * c.weight + particle.state.y * particle.weight) / (c.weight + particle.weight);
+                c.weight = c.weight + particle.weight;
+            }
         });
         // Reassign
         this.particles.forEach(function (particle) {
