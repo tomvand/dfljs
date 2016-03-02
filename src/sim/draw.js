@@ -181,9 +181,6 @@ function drawMeasurement(measurement) {
     var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 4 * world_coordinates.transform(measure.params.sigma_l);
     var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
 
-    var alpha = Math.max(0.0, Math.min(1.0, measurement.delta_rssi / (5 * measure.params.phi)));
-    var red = measurement.isBlocked ? 255 : 0;
-    ctx.fillStyle = 'rgba(' + red + ', 0, 0, ' + alpha + ')';
     ctx.beginPath();
     var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
     ctx.moveTo(pos.x, pos.y);
@@ -191,10 +188,17 @@ function drawMeasurement(measurement) {
         pos = ellipse(phase, x, y, angle, ma_a, mi_a);
         ctx.lineTo(pos.x, pos.y);
     }
-    var old_operation = ctx.globalCompositeOperation;
+    var alpha = Math.max(0.0, Math.min(1.0, Math.abs(measurement.delta_rssi / (5 * measure.params.phi))));
+    var red = measurement.delta_rssi < 0 ? 255 : 0;
+    ctx.fillStyle = 'rgba(' + red + ', 0, 0, ' + alpha + ')';
     ctx.fill();
+    if (measurement.isBlocked) {
+        ctx.strokeWidth = '2px';
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+    }
 
-    if (measurement.delta_rssi < -1.0) {
+    if (Math.abs(measurement.delta_rssi) > 1.0) {
         ctx.font = FONT_LABEL;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -214,9 +218,10 @@ function drawAlm(alm) {
     ctx.strokeRect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y);
 
     alm.particles.forEach(function (particle) {
-        var size = 5.0 * alm.particles.length * particle.weight;
+        var size = 5.0;
+        var alpha = Math.max(0, Math.min(1, particle.weight * alm.particles.length) / 2);
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = 'hsl(' + particle.cluster / alm.Ntargets * 360.0 + ',50%,50%)';
+        ctx.fillStyle = 'hsla(' + particle.cluster / alm.Ntargets * 360.0 + ',50%,50%,' + alpha + ')';
         ctx.fillRect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
     });
 
