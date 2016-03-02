@@ -2,6 +2,8 @@
 
 module.exports = AlmFilter;
 
+var assert = require('assert');
+
 var State = require('../model/state.js');
 var observation = require('../model/observation.js');
 
@@ -85,6 +87,7 @@ AlmFilter.prototype.observe = function (observations) {
         this.particles.forEach(function (particle) {
             var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
             particle.weight /= Fk;
+            assert(!isNaN(particle.weight));
         });
     }
 
@@ -189,7 +192,11 @@ AlmFilter.prototype.cluster = function () {
 
 function approx_normpdf(x, mu, invSigma) {
     var e = mathjs.subtract(x, mu);
-    return Math.exp(mathjs.multiply(-0.5, mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
+    var p = Math.exp(-0.5 * mathjs.det(mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
+    assert.equal(typeof (p), 'number');
+    assert(!isNaN(p));
+    assert.ok(p);
+    return p;
 }
 
 function inBounds(state, bounds) {
