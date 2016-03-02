@@ -34,6 +34,14 @@ AlmFilter.prototype.predict = function (deltaT) {
     this.particles.forEach(function (particle) {
         particle.state.predict(deltaT);
     });
+
+    var bounds = this.bounds;
+    this.particles.forEach(function (particle) {
+        if (!inBounds(particle.state, bounds)) {
+            particle.state.initialize(bounds);
+            particle.weight = 0.0;
+        }
+    });
 };
 
 /**
@@ -80,16 +88,11 @@ AlmFilter.prototype.observe = function (observations) {
 
     var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
     var invSigma = mathjs.inv(Sigma);
-    var bounds = this.bounds;
 
     var pzk = approx_normpdf(zk, muhat_k, invSigma);
     this.particles.forEach(function (particle) {
-        if (inBounds(particle.state, bounds)) {
-            var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
-            particle.weight /= Fk;
-        } else {
-            particle.weight = 0.0;
-        }
+        var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
+        particle.weight /= Fk;
     });
 
     // Normalize

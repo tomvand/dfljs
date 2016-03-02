@@ -1,7 +1,7 @@
 var params = {
     phi: -5.0,
     sigma_l: 0.2,
-    sigma_z: 5.0
+    sigma_z: 2.0
 };
 exports.params = params;
 

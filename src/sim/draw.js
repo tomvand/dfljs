@@ -198,16 +198,14 @@ function drawMeasurement(measurement) {
         ctx.stroke();
     }
 
-    if (Math.abs(measurement.delta_rssi) > 1.0) {
-        ctx.font = FONT_LABEL;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'black';
-        ctx.fillText(measurement.delta_rssi.toFixed(2) + ' dB',
-                0.75 * rx.x + 0.25 * tx.x,
-                0.75 * rx.y + 0.25 * tx.y);
-    }
 
+    ctx.font = FONT_LABEL;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'black';
+    ctx.fillText(measurement.delta_rssi.toFixed(2) + ' dB',
+            0.75 * rx.x + 0.25 * tx.x,
+            0.75 * rx.y + 0.25 * tx.y);
 }
 
 function drawAlm(alm) {

@@ -13,7 +13,7 @@ module.exports.filter = filter;
 
 var settings = {
     backgroundWindow: 60,
-    r: 2.0
+    r: 1.0
 };
 module.exports.settings = settings;
 
@@ -38,9 +38,7 @@ function getAverageLinkRSSI(rssiData, modelBeacons) {
             return;
         }
 
-        var beacons = (rx.address < tx.address)
-                ? [rx, tx]
-                : [tx, rx];
+        var beacons = [rx, tx];
         var link_name = beacons[0].address + beacons[1].address;
 
         var link = link_observations.filter(function (l) {
@@ -77,11 +75,10 @@ function subtractBackground(linkRSSI) {
             filter.filter(link.rssi);
             return;
         } else {
-            var isBlocked = true;
-            if (link.rssi > filter.average() - settings.r * Math.sqrt(filter.variance())) {
+            var isBlocked = (link.rssi < filter.average() - settings.r * Math.max(1.0, Math.sqrt(filter.variance())));
+            if (!isBlocked) {
                 // Update the filter if this is not an outlier.
                 filter.filter(link.rssi);
-                isBlocked = false;
             }
             observations.push({
                 beacons: link.beacons,
