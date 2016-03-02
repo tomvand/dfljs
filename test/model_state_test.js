@@ -33,10 +33,10 @@ describe('State', function () {
     describe('predict()', function () {
         it('predicts its next position', function () {
             var initInfo = {
-                xmin: 0,
-                xmax: 0,
-                ymin: 0,
-                ymax: 0
+                xmin: 1,
+                xmax: 1,
+                ymin: 1,
+                ymax: 1
             };
             var deltaT = 0.1;
 

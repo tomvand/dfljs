@@ -81,6 +81,7 @@ setInterval(function () {
     document.getElementById('clock').innerHTML = new Date(replay.getCurrentTime() * 1000);
     // Update ALM filter
     alm.observe(state.measurements);
+    document.getElementById('filter').innerHTML = alm.total_weight;
     alm.cluster();
 }, meas_period);
 

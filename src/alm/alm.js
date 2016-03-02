@@ -107,6 +107,7 @@ AlmFilter.prototype.normalize = function () {
     this.particles.forEach(function (particle) {
         total_weight += particle.weight;
     });
+    this.total_weight = total_weight; // For debug purposes
 
     this.particles.forEach(function (particle) {
         particle.weight /= total_weight;

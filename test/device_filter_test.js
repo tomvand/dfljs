@@ -32,7 +32,7 @@ describe('filter', function () {
 
         it('subtracts background noise if enough samples have been received', function () {
             var obs;
-            for (var i = 0; i < 200; i++) {
+            for (var i = 0; i < 2000; i++) {
                 obs = rssifilter.filter(measurements, beacons);
             }
             assert.equal(obs.length, 1);
