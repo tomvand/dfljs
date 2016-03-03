@@ -80,12 +80,15 @@ function subtractBackground(linkRSSI) {
                 // Update the filter if this is not an outlier.
                 filter.filter(link.rssi);
             }
-            observations.push({
-                beacons: link.beacons,
-                delta_rssi: link.rssi - filter.average(),
-                isBlocked: isBlocked,
-                link_variance: filter.variance()
-            });
+            var isPositiveOutlier = (link.rssi > filter.average() + settings.r * Math.sqrt(filter.variance()));
+            if (!isPositiveOutlier) {
+                observations.push({
+                    beacons: link.beacons,
+                    delta_rssi: link.rssi - filter.average(),
+                    isBlocked: isBlocked,
+                    link_variance: filter.variance()
+                });
+            }
         }
     });
     return observations;
