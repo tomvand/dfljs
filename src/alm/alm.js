@@ -71,9 +71,15 @@ AlmFilter.prototype.observe = function (observations) {
             Sigmahat_k = mathjs.add(Sigmahat_k, mathjs.multiply(particle.weight, Sigmahat_k_j));
         });
 
+        // Measurement variance Sigma_z
+        var diag = [];
+        observations.forEach(function (observation) {
+            diag.push(observation.link_variance);
+        });
+        var Sigma_z = mathjs.diag(diag);
+
 
         // Weight update
-        var Sigma_z = mathjs.multiply(observation.params.sigma_z, mathjs.eye(observations.length));
         var zk = [];
         observations.forEach(function (obs) {
             zk.push(obs.delta_rssi);

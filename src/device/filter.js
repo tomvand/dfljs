@@ -75,7 +75,7 @@ function subtractBackground(linkRSSI) {
             filter.filter(link.rssi);
             return;
         } else {
-            var isBlocked = (link.rssi < filter.average() - settings.r * Math.max(1.0, Math.sqrt(filter.variance())));
+            var isBlocked = (link.rssi < filter.average() - settings.r * Math.sqrt(filter.variance()));
             if (!isBlocked) {
                 // Update the filter if this is not an outlier.
                 filter.filter(link.rssi);
@@ -83,7 +83,8 @@ function subtractBackground(linkRSSI) {
             observations.push({
                 beacons: link.beacons,
                 delta_rssi: link.rssi - filter.average(),
-                isBlocked: isBlocked
+                isBlocked: isBlocked,
+                link_variance: filter.variance()
             });
         }
     });

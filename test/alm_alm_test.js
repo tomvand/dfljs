@@ -79,8 +79,8 @@ describe('ALM particle filter', function () {
             {x: 0.0, y: -4.0}
         ];
         var observations = [
-            {beacons: [beacons[0], beacons[1]], delta_rssi: -5.0},
-            {beacons: [beacons[0], beacons[2]], delta_rssi: 0.0}
+            {beacons: [beacons[0], beacons[1]], delta_rssi: -5.0, link_variance: 1.0},
+            {beacons: [beacons[0], beacons[2]], delta_rssi: 0.0, link_variance: 1.0}
         ];
 
         alm.predict(0.100);
