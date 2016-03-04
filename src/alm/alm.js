@@ -74,7 +74,10 @@ AlmFilter.prototype.observe = function (observations) {
         // Measurement variance Sigma_z
         var diag = [];
         observations.forEach(function (observation) {
-            diag.push(observation.link_variance);
+            assert.ok(observation.link_variance, 'link variance is not ok');
+            assert(!isNaN(observation.link_variance), 'link variance is NaN');
+            diag.push(Math.max(0.1, observation.link_variance)); // Beunfix voor p is infinity
+            // Maybe fix this inside the filter itself??!
         });
         var Sigma_z = mathjs.diag(diag);
 
@@ -89,11 +92,17 @@ AlmFilter.prototype.observe = function (observations) {
         var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
         var invSigma = mathjs.inv(Sigma);
 
-        var pzk = approx_normpdf(zk, muhat_k, invSigma);
+        var Fk_num = approx_normpdf(zk, muhat_k, invSigma);
+        assert.ok(Fk_num, 'Fk_num is not ok :(');
         this.particles.forEach(function (particle) {
-            var Fk = pzk / approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
-            particle.weight /= Fk;
-            assert(!isNaN(particle.weight));
+            var Fk_den = approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
+            particle.weight = particle.weight * Fk_den / Fk_num;
+            // TODO fix precision errors
+            if (isNaN(particle.weight)) {
+                console.log('particle weight is NaN');
+                debugger;
+            }
+            assert(!isNaN(particle.weight), 'particle weight is NaN :( :( :(');
         });
     }
 
@@ -201,10 +210,14 @@ AlmFilter.prototype.cluster = function () {
 function approx_normpdf(x, mu, invSigma) {
     var e = mathjs.subtract(x, mu);
     var p = Math.exp(-0.5 * mathjs.det(mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
-    assert.equal(typeof (p), 'number');
-    assert(!isNaN(p));
-    assert.ok(p);
+    assert.equal(typeof (p), 'number', 'p is not a number');
+    assert(!isNaN(p), 'p is NaN');
+    if (p === Infinity) {
+        console.log('p is inifnity');
+        debugger;
+    }
     return p;
+    // TODO fix precision errors
 }
 
 function inBounds(state, bounds) {
