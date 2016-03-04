@@ -6,6 +6,8 @@ exports.measure = measure;
  * @property {number} phi Attenuation in dB.
  * @property {number} sigma_l Beam width.
  */
+// measure.js provides its own measurement model and parameters, so a mismatch
+// between the world an tracking filter can be simulated.
 var params = {
     phi: -9.0,
     sigma_l: 0.2,
@@ -33,7 +35,7 @@ function measure(receiver, transmitter, actors) {
     actors.forEach(function (actor) {
         delta_rssi += params.phi * Math.exp(-lambda(receiver, transmitter, actor) / params.sigma_l);
     });
-    delta_rssi += params.sigma_z * randn()
+    delta_rssi += params.sigma_z * randn();
     return {
         receiver: receiver,
         transmitter: transmitter,
