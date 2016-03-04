@@ -53,6 +53,16 @@ AuxPhdFilter.prototype.predict = function (deltaT) {
  *  @property {number} delta_rssi - change in RSSI on this link
  */
 AuxPhdFilter.prototype.observe = function (observations) {
+    this.updateWeights(observations);
+
+    // Normalize
+    this.normalize();
+
+    // Resample
+    this.resample();
+};
+
+AuxPhdFilter.prototype.updateWeights = function (observations) {
     if (observations.length > 0) {
         var gx = function (x) {
             var g = [];
@@ -104,13 +114,7 @@ AuxPhdFilter.prototype.observe = function (observations) {
             assert(!isNaN(particle.weight), 'particle weight is NaN :( :( :(');
         });
     }
-
-    // Normalize
-    this.normalize();
-
-    // Resample
-    this.resample();
-};
+}
 
 AuxPhdFilter.prototype.normalize = function () {
     var total_weight = 0.0;
