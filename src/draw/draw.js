@@ -5,12 +5,13 @@
  * @module
  */
 
-var measure = require('./measure.js');
+var observation = require('../model/observation.js');
 
 exports.attach = attach;
 exports.setView = setView;
 exports.draw = draw;
-exports.drawAlm = drawAlm;
+
+exports._getDrawingData = getDrawingData;
 
 /**
  * Font for labels.
@@ -178,8 +179,8 @@ function drawMeasurement(measurement) {
     var x = 0.5 * (rx.x + tx.x);
     var y = 0.5 * (rx.y + tx.y);
     var angle = Math.atan2(rx.y - tx.y, rx.x - tx.x);
-    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 4 * world_coordinates.transform(measure.params.sigma_l);
-    var mi_a = 4 * world_coordinates.transform(measure.params.sigma_l);
+    var ma_a = distance(rx.x, rx.y, tx.x, tx.y) + 4 * world_coordinates.transform(observation.params.sigma_l);
+    var mi_a = 4 * world_coordinates.transform(observation.params.sigma_l);
 
     ctx.beginPath();
     var pos = ellipse(0.0, x, y, angle, ma_a, mi_a);
@@ -188,7 +189,7 @@ function drawMeasurement(measurement) {
         pos = ellipse(phase, x, y, angle, ma_a, mi_a);
         ctx.lineTo(pos.x, pos.y);
     }
-    var alpha = Math.max(0.0, Math.min(1.0, Math.abs(measurement.delta_rssi / (5 * measure.params.phi))));
+    var alpha = Math.max(0.0, Math.min(1.0, Math.abs(measurement.delta_rssi / (5 * observation.params.phi))));
     var red = measurement.delta_rssi < 0 ? 255 : 0;
     ctx.fillStyle = 'rgba(' + red + ', 0, 0, ' + alpha + ')';
     ctx.fill();
@@ -208,27 +209,10 @@ function drawMeasurement(measurement) {
             0.75 * rx.y + 0.25 * tx.y);
 }
 
-function drawAlm(alm) {
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#000000';
-    var topleft = world_coordinates.transform(alm.bounds.xmin, alm.bounds.ymin);
-    var bottomright = world_coordinates.transform(alm.bounds.xmax, alm.bounds.ymax);
-    ctx.strokeRect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y);
-
-    alm.particles.forEach(function (particle) {
-        var size = 5.0;
-        var alpha = Math.max(0, Math.min(1, particle.weight * alm.particles.length) / 2);
-        var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        ctx.fillStyle = 'hsla(' + particle.cluster / alm.Ntargets * 360.0 + ',50%,50%,' + alpha + ')';
-        ctx.fillRect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
-    });
-
-    alm.clusters.forEach(function (cluster, index) {
-        var pos = world_coordinates.transform(cluster.value.x, cluster.value.y);
-        var r = world_coordinates.transform(0.30);
-        ctx.strokeStyle = 'hsl(' + index / alm.clusters.length * 360.0 + ',100%,50%)';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
-        ctx.stroke();
-    });
+function getDrawingData() {
+    return {
+        ctx: ctx,
+        world_coordinates: world_coordinates
+    };
 }
+

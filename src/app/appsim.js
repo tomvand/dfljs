@@ -1,5 +1,6 @@
 var Alm = require('../alm/alm.js');
-var draw = require('../sim/draw.js');
+var draw = require('../draw/draw.js');
+var drawAlm = require('../draw/draw_alm.js');
 var environment = require('./environment/office_full.js');
 
 var Actor = require('../sim/actor.js');
@@ -60,7 +61,7 @@ var time_period = 0.100;
 setInterval(function () {
     // Draw the current state
     draw.draw(state);
-    draw.drawAlm(alm);
+    drawAlm(alm);
     // Update the ALM filter
     alm.predict(time_period);
 }, time_period * 1000);
