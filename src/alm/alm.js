@@ -27,12 +27,28 @@ var clone = require('clone');
  */
 
 /**
+ * @typedef {Object} Cluster - A cluster of particles that represents a person
+ *  @property {Object} value - Estimated position of the cluster
+ *   @property {number} value.x - X position of the cluster
+ *   @property {number} value.y - Y position of the cluster
+ *  @property {number} weight - Summed weight of all particles that belong to this cluster
+ */
+
+/**
+ * @typedef {Object} Particle - An object that represents a possible state of a person
+ *  @property {module:model/state~State} state - State of the particle
+ *  @property {number} weight - Representation of the likelihood of this state
+ */
+
+/**
  * Additive Likelihood Moment filter
  * @class
  * @param {number} Ntargets - Number of targets to track
  * @param {number} Nparticles - Number of particles to use per target
  * @param {module:model/state~initInfo} initInfo - Initialization info for particle states
  * @param {module:alm/alm~Bounds} bounds - Outer edges of the observed area
+ * @property {Particle[]} particles - Particles used by this filter
+ * @property {Cluster[]} clusters - Estimated clusters
  * @returns {alm/alm.AlmFilter}
  */
 function AlmFilter(Ntargets, Nparticles, initInfo, bounds) {
