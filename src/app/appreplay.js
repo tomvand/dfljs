@@ -1,4 +1,5 @@
 /* global log */
+require('../device/replay/log-2016-03-02.json');
 
 var replay = require('../device/replay/replay.js');
 var rssifilter = require('../device/filter.js');
