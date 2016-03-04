@@ -37,7 +37,8 @@ function measure(receiver, transmitter, actors) {
     return {
         receiver: receiver,
         transmitter: transmitter,
-        delta_rssi: delta_rssi
+        delta_rssi: delta_rssi,
+        link_variance: params.sigma_z
     };
 }
 
