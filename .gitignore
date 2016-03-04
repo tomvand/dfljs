@@ -2,4 +2,5 @@ nbproject/
 node_modules/
 platforms/
 plugins/
+doc/
 www/app.js

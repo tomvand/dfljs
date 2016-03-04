@@ -1,5 +1,12 @@
 "use strict";
 
+/**
+ * @module alm/alm
+ * The ALM module exposes functions to create and use an Additive Likelihood
+ * Moment filter.
+ */
+
+/** ALM filter constructor */
 module.exports = AlmFilter;
 
 var assert = require('assert');
@@ -11,35 +18,61 @@ var mathjs = require('mathjs');
 
 var clone = require('clone');
 
-function AlmFilter(Ntargets, Nparticles, initInfo, bounds) {
-    this.Ntargets = Ntargets;
-    this.Nparticles = Nparticles;
-    this.initializeParticles(initInfo);
+/**
+ * @typedef {Object} Bounds - A rectangle that should contain all particles
+ * @property {number} xmin - Minimum value of x
+ * @property {number} xmax - Maxmimum value of x
+ * @property {number} ymin - Minimum value of y
+ * @property {number} ymax - Maximum value of y
+ */
 
-    this.bounds = bounds;
+/**
+ * Additive Likelihood Moment filter
+ * @class
+ * @param {number} Ntargets - Number of targets to track
+ * @param {number} Nparticles - Number of particles to use per target
+ * @param {module:model/state~initInfo} initInfo - Initialization info for particle states
+ * @param {module:alm/alm~Bounds} bounds - Outer edges of the observed area
+ * @returns {alm/alm.AlmFilter}
+ */
+function AlmFilter(Ntargets, Nparticles, initInfo, bounds) {
+    this._Ntargets = Ntargets;
+    this._Nparticles = Nparticles;
+    this._initializeParticles(initInfo);
+
+    this._bounds = bounds;
 
     this.clusters = [];
 }
 
-AlmFilter.prototype.initializeParticles = function (initInfo) {
+/**
+ * Initialize all particles using initInfo
+ * @private
+ * @param {module:model/state~initInfo} initInfo
+ */
+AlmFilter.prototype._initializeParticles = function (initInfo) {
     this.particles = [];
-    for (var i = 0; i < this.Ntargets * this.Nparticles; i++) {
+    for (var i = 0; i < this._Ntargets * this._Nparticles; i++) {
         this.particles.push({
             state: new State(initInfo),
-            weight: 1 / (this.Ntargets * this.Nparticles),
-            cluster: Math.floor(Math.random() * this.Ntargets)
+            weight: 1 / (this._Ntargets * this._Nparticles),
+            cluster: Math.floor(Math.random() * this._Ntargets)
         });
     }
 };
 
+/**
+ * Predict the next state of all particles
+ * @param {number} deltaT - Prediction timestep length
+ */
 AlmFilter.prototype.predict = function (deltaT) {
     this.particles.forEach(function (particle) {
         particle.state.predict(deltaT);
     });
 
-    var bounds = this.bounds;
+    var bounds = this._bounds;
     this.particles.forEach(function (particle) {
-        if (!inBounds(particle.state, bounds)) {
+        if (!_inBounds(particle.state, bounds)) {
             particle.state.initialize(bounds);
             particle.weight = 0.0;
         }
@@ -47,10 +80,9 @@ AlmFilter.prototype.predict = function (deltaT) {
 };
 
 /**
- *
- * @param {object[]} observations
- *  @property {Beacon[]} beacons - beacon that describe this link
- *  @property {number} delta_rssi - change in RSSI on this link
+ * Update the particle weights according to the given observation, and resample
+ * if necessary.
+ * @param {module:device/filter~observation[]} observations - Current observations
  */
 AlmFilter.prototype.observe = function (observations) {
     if (observations.length > 0) {
@@ -91,10 +123,10 @@ AlmFilter.prototype.observe = function (observations) {
         var Sigma = mathjs.add(Sigmahat_k, Sigma_z);
         var invSigma = mathjs.inv(Sigma);
 
-        var Fk_num = approx_normpdf(zk, muhat_k, invSigma);
+        var Fk_num = _approx_normpdf(zk, muhat_k, invSigma);
         assert.ok(Fk_num, 'Fk_num is not ok :(');
         this.particles.forEach(function (particle) {
-            var Fk_den = approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
+            var Fk_den = _approx_normpdf(zk, mathjs.add(gx(particle.state), muhat_k), invSigma);
             particle.weight = particle.weight * Fk_den / Fk_num;
             // TODO fix precision errors
             if (isNaN(particle.weight)) {
@@ -106,13 +138,17 @@ AlmFilter.prototype.observe = function (observations) {
     }
 
     // Normalize
-    this.normalize();
+    this._normalize();
 
     // Resample
-    this.resample();
+    this._resample();
 };
 
-AlmFilter.prototype.normalize = function () {
+/**
+ * Normalize the weights of all particles
+ * @private
+ */
+AlmFilter.prototype._normalize = function () {
     var total_weight = 0.0;
     this.particles.forEach(function (particle) {
         total_weight += particle.weight;
@@ -124,7 +160,11 @@ AlmFilter.prototype.normalize = function () {
     });
 };
 
-AlmFilter.prototype.resample = function () {
+/**
+ * Resample particles according to their weights
+ * @private
+ */
+AlmFilter.prototype._resample = function () {
     // Calculate the effective sample size
     var Swk2 = 0.0;
     this.particles.forEach(function (particle) {
@@ -132,12 +172,12 @@ AlmFilter.prototype.resample = function () {
     });
     var Neff = 1.0 / Swk2;
 
-    if (Neff > this.Ntargets * this.Nparticles / 2.0) {
+    if (Neff > this._Ntargets * this._Nparticles / 2.0) {
         return;
     }
 
     var new_particles = [];
-    var M = this.Ntargets * this.Nparticles;
+    var M = this._Ntargets * this._Nparticles;
     var r = Math.random() / M;
     var c = this.particles[0].weight;
     var i = 0;
@@ -154,6 +194,11 @@ AlmFilter.prototype.resample = function () {
     this.particles = new_particles;
 };
 
+/**
+ * Estimate cluster positions from the current particle states
+ *
+ * The estimated clusters are stored in this.clusters.
+ */
 AlmFilter.prototype.cluster = function () {
     // Apply k-means clustering
     var clusters = [];
@@ -162,7 +207,7 @@ AlmFilter.prototype.cluster = function () {
         var converged = true;
         // Initialize clusters
         clusters = [];
-        for (var i = 0; i < this.Ntargets; i++) {
+        for (var i = 0; i < this._Ntargets; i++) {
             var initial = Math.floor(Math.random() * this.particles.length);
             clusters[i] = {
                 value: {
@@ -173,7 +218,7 @@ AlmFilter.prototype.cluster = function () {
             };
         }
         // Find the current means
-        var Ntargets = this.Ntargets;
+        var Ntargets = this._Ntargets;
         this.particles.forEach(function (particle) {
             particle.cluster = (particle.cluster < Ntargets) ? particle.cluster : 0;
             var c = clusters[particle.cluster];
@@ -206,12 +251,21 @@ AlmFilter.prototype.cluster = function () {
     this.clusters = clusters;
 };
 
-function approx_normpdf(x, mu, invSigma) {
+/**
+ * Approximate normal probability density function.
+ * Caution: this function returns a scaled value of the actual pdf!
+ * @private
+ * @param {module:mathjs~vector} x
+ * @param {module:mathjs~vector} mu
+ * @param {module:mathjs~matrix} invSigma
+ * @returns {Number}
+ */
+function _approx_normpdf(x, mu, invSigma) {
     var e = mathjs.subtract(x, mu);
     var p = Math.exp(-0.5 * mathjs.det(mathjs.multiply(mathjs.multiply(mathjs.transpose(e), invSigma), e)));
     assert.equal(typeof (p), 'number', 'p is not a number');
     assert(!isNaN(p), 'p is NaN');
-    if (p === Infinity) {
+    if (p === Infinity) { /* global Infinity */
         console.log('p is inifnity');
         debugger;
     }
@@ -219,7 +273,14 @@ function approx_normpdf(x, mu, invSigma) {
     // TODO fix precision errors
 }
 
-function inBounds(state, bounds) {
+/**
+ * Check whether a state is within the given bounds
+ * @private
+ * @param {module:model/state~State} state
+ * @param {Bounds} bounds
+ * @returns {Boolean} True if the state is within the given bounds
+ */
+function _inBounds(state, bounds) {
     return state.x >= bounds.xmin &&
             state.x <= bounds.xmax &&
             state.y >= bounds.ymin &&
