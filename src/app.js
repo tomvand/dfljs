@@ -34,7 +34,8 @@ var all_beacons = beacons;
 
 var actor = new Actor(2.0, 5.0, 0.0);
 var stationary = new Actor(6.0, 3.0, Math.PI);
-var actors = [actor, stationary];
+//var actors = [actor, stationary];
+var actors = [actor];
 
 var Ntargets = 1;
 var Nparticles = 1000;
