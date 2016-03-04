@@ -12,6 +12,7 @@ var RunVar = require('../util/runningvariance.js');
 module.exports.filter = filter;
 
 var settings = {
+    minimum_variance: 0.1,
     backgroundWindow: 60,
     r: 1.0
 };
@@ -75,18 +76,19 @@ function subtractBackground(linkRSSI) {
             filter.filter(link.rssi);
             return;
         } else {
-            var isBlocked = (link.rssi < filter.average() - settings.r * Math.sqrt(filter.variance()));
+            var variance = Math.max(settings.minimum_variance, filter.variance());
+            var isBlocked = (link.rssi < filter.average() - settings.r * Math.sqrt(variance));
             if (!isBlocked) {
                 // Update the filter if this is not an outlier.
                 filter.filter(link.rssi);
             }
-            var isPositiveOutlier = (link.rssi > filter.average() + settings.r * Math.sqrt(filter.variance()));
+            var isPositiveOutlier = (link.rssi > filter.average() + settings.r * Math.sqrt(variance));
             if (!isPositiveOutlier) {
                 observations.push({
                     beacons: link.beacons,
                     delta_rssi: link.rssi - filter.average(),
                     isBlocked: isBlocked,
-                    link_variance: filter.variance()
+                    link_variance: variance
                 });
             }
         }

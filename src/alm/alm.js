@@ -76,8 +76,7 @@ AlmFilter.prototype.observe = function (observations) {
         observations.forEach(function (observation) {
             assert.ok(observation.link_variance, 'link variance is not ok');
             assert(!isNaN(observation.link_variance), 'link variance is NaN');
-            diag.push(Math.max(0.1, observation.link_variance)); // Beunfix voor p is infinity
-            // Maybe fix this inside the filter itself??!
+            diag.push(observation.link_variance);
         });
         var Sigma_z = mathjs.diag(diag);
 
