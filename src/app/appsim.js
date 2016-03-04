@@ -1,4 +1,4 @@
-var Alm = require('../alm/alm.js');
+var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAlm = require('../draw/draw_alm.js');
 var environment = require('./environment/office_full.js');
@@ -11,7 +11,7 @@ var keyboard = require('../sim/keyboardcontroller.js');
 var Ntargets = 2;
 var Nparticles = 500;
 var initInfo = environment.bounds;
-var alm = new Alm(Ntargets, Nparticles, initInfo, environment.bounds);
+var alm = new AuxPhd(Ntargets, Nparticles, initInfo, environment.bounds);
 
 // Set up actors
 var actor = new Actor(2.0, 5.0, 0.0);

@@ -3,7 +3,7 @@ require('../device/replay/log-2016-03-02.json');
 
 var replay = require('../device/replay/replay.js');
 var rssifilter = require('../device/filter.js');
-var Alm = require('../alm/alm.js');
+var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAlm = require('../draw/draw_alm.js');
 var environment = require('./environment/office_small.js');
@@ -21,7 +21,7 @@ function getMeasurements() {
 var Ntargets = 1;
 var Nparticles = 1000;
 var initInfo = environment.bounds;
-var alm = new Alm(Ntargets, Nparticles, initInfo, environment.bounds);
+var alm = new AuxPhd(Ntargets, Nparticles, initInfo, environment.bounds);
 
 // Set up drawing
 draw.attach(document.getElementById('canvas'));
