@@ -11,9 +11,11 @@ var mathjs = require('mathjs');
 
 var clone = require('clone');
 
-function AuxPhdFilter(Ntargets, Nparticles, initInfo, bounds) {
-    this.Ntargets = Ntargets;
-    this.Nparticles = Nparticles;
+function AuxPhdFilter(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, bounds) {
+    this.NTargets = 0;
+    this.NMaxTargets = NMaxTargets;
+    this.NParticlesPerTarget = NParticlesPerTarget;
+    this.NAuxiliaryParticles = NAuxiliaryParticles;
     this.initializeParticles(initInfo);
 
     this.bounds = bounds;
@@ -23,11 +25,11 @@ function AuxPhdFilter(Ntargets, Nparticles, initInfo, bounds) {
 
 AuxPhdFilter.prototype.initializeParticles = function (initInfo) {
     this.particles = [];
-    for (var i = 0; i < this.Ntargets * this.Nparticles; i++) {
+    for (var i = 0; i < this.NMaxTargets * this.NParticlesPerTarget; i++) {
         this.particles.push({
             state: new State(initInfo),
-            weight: 1 / (this.Ntargets * this.Nparticles),
-            cluster: Math.floor(Math.random() * this.Ntargets)
+            weight: 1 / (this.NMaxTargets * this.NParticlesPerTarget),
+            cluster: Math.floor(Math.random() * this.NMaxTargets)
         });
     }
 };
@@ -136,12 +138,12 @@ AuxPhdFilter.prototype.resample = function () {
     });
     var Neff = 1.0 / Swk2;
 
-    if (Neff > this.Ntargets * this.Nparticles / 10.0) {
+    if (Neff > this.NMaxTargets * this.NParticlesPerTarget / 10.0) {
         return;
     }
 
     var new_particles = [];
-    var M = this.Ntargets * this.Nparticles;
+    var M = this.NMaxTargets * this.NParticlesPerTarget;
     var r = Math.random() / M;
     var c = this.particles[0].weight;
     var i = 0;
@@ -166,7 +168,7 @@ AuxPhdFilter.prototype.cluster = function () {
         var converged = true;
         // Initialize clusters
         clusters = [];
-        for (var i = 0; i < this.Ntargets; i++) {
+        for (var i = 0; i < this.NMaxTargets; i++) {
             var initial = Math.floor(Math.random() * this.particles.length);
             clusters[i] = {
                 value: {
@@ -177,7 +179,7 @@ AuxPhdFilter.prototype.cluster = function () {
             };
         }
         // Find the current means
-        var Ntargets = this.Ntargets;
+        var Ntargets = this.NMaxTargets;
         this.particles.forEach(function (particle) {
             particle.cluster = (particle.cluster < Ntargets) ? particle.cluster : 0;
             var c = clusters[particle.cluster];

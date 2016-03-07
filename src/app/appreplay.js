@@ -5,7 +5,7 @@ var replay = require('../device/replay/replay.js');
 var rssifilter = require('../device/filter.js');
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
-var drawAlm = require('../draw/draw_alm.js');
+var drawAuxPhd = require('../draw/draw_auxphd.js');
 var environment = require('./environment/office_small.js');
 
 // Set up the replay device
@@ -18,10 +18,11 @@ function getMeasurements() {
 }
 
 // Set up the tracking filter
-var Ntargets = 1;
-var Nparticles = 1000;
+var NMaxTargets = 1;
+var NParticlesperTarget = 1000;
+var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
-var alm = new AuxPhd(Ntargets, Nparticles, initInfo, environment.bounds);
+var alm = new AuxPhd(NMaxTargets, NParticlesperTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
 // Set up drawing
 draw.attach(document.getElementById('canvas'));
@@ -55,7 +56,7 @@ var time_period = 0.100;
 setInterval(function () {
     // Draw the current state
     draw.draw(state);
-    drawAlm(alm);
+    drawAuxPhd(alm);
     // Update the ALM filter
     alm.predict(time_period);
 }, time_period * 1000);

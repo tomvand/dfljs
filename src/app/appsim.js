@@ -1,6 +1,6 @@
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
-var drawAlm = require('../draw/draw_alm.js');
+var drawAuxPhd = require('../draw/draw_auxphd.js');
 var environment = require('./environment/office_full.js');
 
 var Actor = require('../sim/actor.js');
@@ -8,10 +8,11 @@ var measure = require('../sim/measure.js');
 var keyboard = require('../sim/keyboardcontroller.js');
 
 // Set up the tracking filter
-var Ntargets = 2;
-var Nparticles = 500;
+var NMaxTargets = 2;
+var NParticlesPerTarget = 500;
+var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
-var alm = new AuxPhd(Ntargets, Nparticles, initInfo, environment.bounds);
+var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
 // Set up actors
 var actor = new Actor(2.0, 5.0, 0.0);
@@ -61,7 +62,7 @@ var time_period = 0.100;
 setInterval(function () {
     // Draw the current state
     draw.draw(state);
-    drawAlm(alm);
+    drawAuxPhd(alm);
     // Update the ALM filter
     alm.predict(time_period);
 }, time_period * 1000);
