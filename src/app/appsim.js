@@ -1,6 +1,6 @@
-var AuxPhd = require('../auxphd/auxphd.js');
+var AuxPhd = require('../auxphd/auxphd_nocluster.js');
 var draw = require('../draw/draw.js');
-var drawAuxPhd = require('../draw/draw_auxphd.js');
+var drawAuxPhd = require('../draw/draw_auxphd_nocluster.js');
 var environment = require('./environment/office_full.js');
 
 var Actor = require('../sim/actor.js');
