@@ -39,3 +39,7 @@ State.prototype.survive = function () {
         return 0.0;
     }
 };
+
+State.prototype.birth = function () {
+    return 0.05;
+};

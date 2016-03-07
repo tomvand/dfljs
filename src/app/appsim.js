@@ -8,9 +8,9 @@ var measure = require('../sim/measure.js');
 var keyboard = require('../sim/keyboardcontroller.js');
 
 // Set up the tracking filter
-var NMaxTargets = 2;
-var NParticlesPerTarget = 500;
-var NAuxiliaryParticles = 500;
+var NMaxTargets = 5;
+var NParticlesPerTarget = 200;
+var NAuxiliaryParticles = 200;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
@@ -54,7 +54,6 @@ setInterval(function () {
     // Update ALM filter
     alm.observe(state.measurements);
     document.getElementById('filter').innerHTML = alm.total_weight;
-    alm.cluster();
 }, meas_period * 1000);
 
 // Set up time updates
