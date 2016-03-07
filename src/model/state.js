@@ -27,3 +27,15 @@ State.prototype.predict = function (deltaT) {
     this.x += Math.cos(this.direction) * this.speed * deltaT;
     this.y += Math.sin(this.direction) * this.speed * deltaT;
 };
+
+State.prototype.survive = function () {
+    var isInBounds = this.x >= this.initInfo.xmin &&
+            this.x <= this.initInfo.xmax &&
+            this.y >= this.initInfo.ymin &&
+            this.y <= this.initInfo.ymax;
+    if (isInBounds) {
+        return 0.95;
+    } else {
+        return 0.0;
+    }
+};

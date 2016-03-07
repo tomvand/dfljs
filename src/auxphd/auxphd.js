@@ -35,14 +35,7 @@ AuxPhdFilter.prototype.initializeParticles = function (initInfo) {
 AuxPhdFilter.prototype.predict = function (deltaT) {
     this.particles.forEach(function (particle) {
         particle.state.predict(deltaT);
-    });
-
-    var bounds = this.bounds;
-    this.particles.forEach(function (particle) {
-        if (!inBounds(particle.state, bounds)) {
-            particle.state.initialize(bounds);
-            particle.weight = 0.0;
-        }
+        particle.weight *= particle.state.survive();
     });
 };
 
@@ -53,13 +46,20 @@ AuxPhdFilter.prototype.predict = function (deltaT) {
  *  @property {number} delta_rssi - change in RSSI on this link
  */
 AuxPhdFilter.prototype.observe = function (observations) {
+    // Auxiliary proposal
+    //      Add NAux new particles according to gamma1 and pb
+    //      Update the weights of all particles
+    //      Overwrite the new particles with new proposals according to gamma2
+    //      Normalize the weights of the new particles
+
+    // Weight update and state estimation
+    //      Update the weights of all particles
     this.updateWeights(observations);
-
-    // Normalize
+    //      Estimate the number of targets
+    //      Resample for the new number of targets
     this.normalize();
-
-    // Resample
     this.resample();
+    //      Cluster (if applicable) -> is separate method! keep that way or not?
 };
 
 AuxPhdFilter.prototype.updateWeights = function (observations) {
@@ -114,7 +114,7 @@ AuxPhdFilter.prototype.updateWeights = function (observations) {
             assert(!isNaN(particle.weight), 'particle weight is NaN :( :( :(');
         });
     }
-}
+};
 
 AuxPhdFilter.prototype.normalize = function () {
     var total_weight = 0.0;
@@ -136,7 +136,7 @@ AuxPhdFilter.prototype.resample = function () {
     });
     var Neff = 1.0 / Swk2;
 
-    if (Neff > this.Ntargets * this.Nparticles / 2.0) {
+    if (Neff > this.Ntargets * this.Nparticles / 10.0) {
         return;
     }
 
@@ -223,10 +223,4 @@ function approx_normpdf(x, mu, invSigma) {
     // TODO fix precision errors
 }
 
-function inBounds(state, bounds) {
-    return state.x >= bounds.xmin &&
-            state.x <= bounds.xmax &&
-            state.y >= bounds.ymin &&
-            state.y <= bounds.ymax;
-}
 
