@@ -66,11 +66,6 @@ AuxPhdFilter.prototype.observe = function (observations) {
     }
     // 11-14: Weight update
     this.updateWeights(observations);
-    var xWeight = 0.0;
-    this.particles.forEach(function (particle) {
-        xWeight += particle.weight;
-    });
-    console.log('After auxiliary weight update: ' + xWeight);
     // 15-17: Sample new auxiliary particles
     var auxWeight = 0.0;
     for (var j = Npk; j < Npk + this.Jp; j++) {
@@ -100,13 +95,8 @@ AuxPhdFilter.prototype.observe = function (observations) {
     }
     // 20-23: Weight update
     this.updateWeights(observations);
-    var xxWeight = 0.0;
-    this.particles.forEach(function (particle) {
-        xxWeight += particle.weight;
-    });
-    console.log('After final weight update: ' + xxWeight);
     // 24: Target number estimation
-    this.Np = 2; // TODO
+    this.Np = this.silhouette();
     // 25: Resample
     var newParticles = [];
     var totalWeight = 0.0;
@@ -215,6 +205,9 @@ AuxPhdFilter.prototype.cluster = function (N) {
                     minCluster = j;
                 }
             }
+            if (clusterAssignments[i] !== minCluster) {
+                isConverged = false;
+            }
             clusterAssignments[i] = minCluster;
         }
         // Update step
@@ -240,6 +233,55 @@ AuxPhdFilter.prototype.cluster = function (N) {
         clusters: clusters,
         assignments: clusterAssignments
     };
+};
+
+
+AuxPhdFilter.prototype.silhouette = function () {
+    var bestSilhouette = -1.0;
+    var bestn = 2;
+    for (var n = 2; n < this.Nmax; n++) {
+        var silhouette = 0;
+        var clusterInfo = this.cluster(n);
+        for (var i = 0; i < this.particles.length; i++) {
+            var pi = this.particles[i];
+            var l1i = 0;
+            var w1i = 0;
+            for (var j = 0; j < this.particles.length; j++) {
+                if (clusterInfo.assignments[j] !== clusterInfo.assignments[i] ||
+                        i === j) {
+                    continue;
+                }
+                var pj = this.particles[j];
+                if (w1i + pi.weight * pj.weight > 0) {
+                    l1i = (l1i * w1i + distance(pi.state, pj.state) * pi.weight * pj.weight) /
+                            (w1i + pi.weight + pj.weight);
+                    w1i += pi.weight * pj.weight;
+                }
+            }
+
+            var l2i = 0;
+            var w2i = 0;
+            for (var j = 0; j < n; j++) {
+                if (j === clusterInfo.assignments[i]) {
+                    continue;
+                }
+                if (w2i + pi.weight * clusterInfo.clusters[j].weight > 0) {
+                    l2i = (l2i * w2i + distance(pi.state, clusterInfo.clusters[j]) * pi.weight * clusterInfo.clusters[j].weight) /
+                            (w2i + pi.weight * clusterInfo.clusters[j].weight);
+                    w2i += pi.weight * clusterInfo.clusters[j].weight;
+                }
+            }
+
+            silhouette += (l2i - l1i) / Math.max(l1i, l2i) / this.particles.length;
+        }
+
+        if (silhouette > bestSilhouette) {
+            bestSilhouette = silhouette;
+            bestn = n;
+        }
+    }
+
+    return bestn;
 };
 
 
