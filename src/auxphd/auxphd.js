@@ -53,6 +53,9 @@ AuxPhdFilter.prototype.predict = function (deltaT) {
 };
 
 AuxPhdFilter.prototype.observe = function (observations) {
+    if (observations.length <= 0) {
+        return;
+    }
     // 3: Npk
     var Npk = this.Np * this.Nppt;
     // 8-10: Auxiliary proposal
