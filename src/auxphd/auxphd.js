@@ -173,6 +173,7 @@ AuxPhdFilter.prototype.updateWeights = function (observations) {
         var gxi = g(this.particles[i].state);
         var num = approx_normpdf(mathjs.subtract(zk, mathjs.add(mk, gxi)), invSigma);
         this.particles[i].weight *= num / den;
+        this.particles[i].weight = Math.min(1.0, this.particles[i].weight);
     }
 };
 
