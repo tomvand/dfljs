@@ -26,6 +26,7 @@ function AuxPhdFilter(maxTargets, particlesPerTarget, auxiliaryParticles, initIn
     this.bounds = bounds;
 
     this.clusters = [];
+    this.clusterAssignments = [];
 }
 
 AuxPhdFilter.prototype.initialize = function (initInfo) {
@@ -128,7 +129,9 @@ AuxPhdFilter.prototype.observe = function (observations) {
     }
     this.particles = newParticles;
     // 26: Clustering
-    // TODO
+    var clusterInfo = this.cluster(this.Np);
+    this.clusters = clusterInfo.clusters;
+    this.clusterAssignments = clusterInfo.assignments;
 };
 
 
@@ -176,6 +179,75 @@ AuxPhdFilter.prototype.updateWeights = function (observations) {
         this.particles[i].weight = Math.min(1.0, this.particles[i].weight);
     }
 };
+
+
+AuxPhdFilter.prototype.cluster = function (N) {
+    // Prepare for clustering
+    var clusters = [];
+    var clusterAssignments = [];
+    for (var i = 0; i < N; i++) {
+        if (this.clusters[i]) {
+            clusters[i] = clone(this.clusters[i]);
+            clusters[i].weight = 0;
+        } else {
+            var j = Math.floor(Math.random() * this.particles.length);
+            clusters[i] = {
+                x: this.particles[j].state.x,
+                y: this.particles[j].state.y,
+                weight: 0
+            };
+        }
+    }
+    // Iterate until converged or maximum number of steps reached
+    var stepsRemaining = 100;
+    var isConverged;
+    do {
+        isConverged = true;
+        // Assignment step
+        for (var i = 0; i < this.particles.length; i++) {
+            var pi = this.particles[i];
+            var minDist = Number.POSITIVE_INFINITY;
+            var minCluster = 0;
+            for (var j = 0; j < N; j++) {
+                var dist = distance(pi.state, clusters[j]);
+                if (dist < minDist) {
+                    minDist = dist;
+                    minCluster = j;
+                }
+            }
+            clusterAssignments[i] = minCluster;
+        }
+        // Update step
+        for (var i = 0; i < N; i++) {
+            clusters[i].weight = 0.0;
+        }
+        for (var i = 0; i < this.particles.length; i++) {
+            var pi = this.particles[i];
+            var j = clusterAssignments[i];
+            if (clusters[j].weight + pi.weight > 0) {
+                clusters[j].x = (clusters[j].x * clusters[j].weight +
+                        pi.state.x * pi.weight) / (clusters[j].weight + pi.weight);
+                clusters[j].y = (clusters[j].y * clusters[j].weight +
+                        pi.state.y * pi.weight) / (clusters[j].weight + pi.weight);
+                clusters[j].weight += pi.weight;
+            }
+        }
+        // Decrease max remaining steps
+        stepsRemaining--;
+    } while (!isConverged && stepsRemaining > 0);
+
+    return {
+        clusters: clusters,
+        assignments: clusterAssignments
+    };
+};
+
+
+function distance(pos1, pos2) {
+    var dx = pos1.x - pos2.x;
+    var dy = pos1.y - pos2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
 
 
 function approx_normpdf(e, invSigma) {
