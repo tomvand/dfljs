@@ -52,6 +52,9 @@ AuxPhdFilter.prototype.predict = function (deltaT) {
     for (var i = 0; i < Npk; i++) {
         this.particles[i].state.predict(deltaT);
         this.particles[i].weight *= this.particles[i].state.survive();
+        if (!(this.clusterAssignments[i] > 0)) {
+            this.particles[i].weight *= 0.20;
+        }
     }
 };
 
