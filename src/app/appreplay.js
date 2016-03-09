@@ -19,8 +19,8 @@ function getMeasurements() {
 
 // Set up the tracking filter
 var NMaxTargets = 5;
-var NParticlesperTarget = 200;
-var NAuxiliaryParticles = 200;
+var NParticlesperTarget = 50;
+var NAuxiliaryParticles = 100;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesperTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 

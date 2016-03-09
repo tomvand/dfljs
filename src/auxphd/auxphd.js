@@ -107,7 +107,6 @@ AuxPhdFilter.prototype.observe = function (observations) {
     // 24: Target number estimation
     var clusterInfo = this.DBSCAN();
     this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
-    this.clusters = clusterInfo.clusters;
     // 25: Resample
     var newParticles = [];
     if (this.Np > 0) {
@@ -128,11 +127,13 @@ AuxPhdFilter.prototype.observe = function (observations) {
                 state: clone(this.particles[j].state),
                 weight: 1 / this.Nppt
             };
-            // 26: Clustering
-            this.clusterAssignments[i] = clusterInfo.assignments[j];
         }
     }
     this.particles = newParticles;
+    // 26: Clustering
+    clusterInfo = this.DBSCAN();
+    this.clusters = clusterInfo.clusters;
+    this.clusterAssignments = clusterInfo.assignments;
 };
 
 

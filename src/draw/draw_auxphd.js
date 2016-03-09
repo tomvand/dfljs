@@ -25,12 +25,14 @@ function drawAuxPhd(auxPhd) {
 
     for (var i = 1; i < auxPhd.clusters.length; i++) {
         var cluster = auxPhd.clusters[i];
-        var pos = world_coordinates.transform(cluster.x, cluster.y);
-        var r = world_coordinates.transform(0.30);
-        ctx.strokeStyle = 'hsl(' + i / auxPhd.clusters.length * 360.0 + ',100%,50%)';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
-        ctx.stroke();
+        if (cluster.weight > 0.5) {
+            var pos = world_coordinates.transform(cluster.x, cluster.y);
+            var r = world_coordinates.transform(0.30);
+            ctx.strokeStyle = 'hsl(' + i / auxPhd.clusters.length * 360.0 + ',100%,50%)';
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
     }
 }
 
