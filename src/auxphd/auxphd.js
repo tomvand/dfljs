@@ -25,6 +25,9 @@ function AuxPhdFilter(maxTargets, particlesPerTarget, auxiliaryParticles, initIn
     this.initInfo = initInfo;
     this.bounds = bounds;
 
+    this.eps = 0.3;
+    this.minPts = 0.10 * particlesPerTarget;
+
     this.clusters = [];
     this.clusterAssignments = [];
 }
@@ -99,7 +102,8 @@ AuxPhdFilter.prototype.observe = function (observations) {
     // 20-23: Weight update
     this.updateWeights(observations);
     // 24: Target number estimation
-    this.Np = this.silhouette();
+    var assignments = this.DBSCAN();
+    this.Np = 2; // TODO
     // 25: Resample
     var newParticles = [];
     var totalWeight = 0.0;
@@ -119,12 +123,10 @@ AuxPhdFilter.prototype.observe = function (observations) {
             state: clone(this.particles[j].state),
             weight: 1 / this.Nppt
         };
+        this.clusterAssignments[i] = assignments[j];
     }
     this.particles = newParticles;
     // 26: Clustering
-    var clusterInfo = this.cluster(this.Np);
-    this.clusters = clusterInfo.clusters;
-    this.clusterAssignments = clusterInfo.assignments;
 };
 
 
@@ -174,118 +176,71 @@ AuxPhdFilter.prototype.updateWeights = function (observations) {
 };
 
 
-AuxPhdFilter.prototype.cluster = function (N) {
-    // Prepare for clustering
-    var clusters = [];
-    var clusterAssignments = [];
-    for (var i = 0; i < N; i++) {
-        if (this.clusters[i]) {
-            clusters[i] = clone(this.clusters[i]);
-            clusters[i].weight = 0;
-        } else {
-            var j = Math.floor(Math.random() * this.particles.length);
-            clusters[i] = {
-                x: this.particles[j].state.x,
-                y: this.particles[j].state.y,
-                weight: 0
-            };
+AuxPhdFilter.prototype.DBSCAN = function () {
+    // Pre-calculate a distance matrix
+    var dist = this.distanceMatrix();
+    // Keep track of assignments
+    // undefined: not visited
+    // 0: outlier
+    // 1-n: cluster
+    var assignments = [];
+    var C = 0;
+
+    for (var i = 0; i < this.particles.length; i++) {
+        if (assignments[i] !== undefined) {
+            continue;
         }
-    }
-    // Iterate until converged or maximum number of steps reached
-    var stepsRemaining = 100;
-    var isConverged;
-    do {
-        isConverged = true;
-        // Assignment step
-        for (var i = 0; i < this.particles.length; i++) {
-            var pi = this.particles[i];
-            var minDist = Number.POSITIVE_INFINITY;
-            var minCluster = 0;
-            for (var j = 0; j < N; j++) {
-                var dist = distance(pi.state, clusters[j]);
-                if (dist < minDist) {
-                    minDist = dist;
-                    minCluster = j;
+        assignments[i] = 0;
+        var neighbourIndices = regionQuery(dist, i, this.eps);
+        if (neighbourIndices.length >= this.minPts) {
+            C++;
+            // Expand cluster
+            assignments[i] = C;
+            for (var j = 0; j < neighbourIndices.length; j++) {
+                var prime = neighbourIndices[j];
+                if (assignments[prime] === undefined) {
+                    assignments[prime] = 0;
+                    var primeNeighbourIndices = regionQuery(dist, prime, this.eps);
+                    if (primeNeighbourIndices.length >= this.minPts) {
+                        Array.prototype.push.apply(neighbourIndices, primeNeighbourIndices);
+                    }
+                }
+                if (assignments[prime] === 0) {
+                    assignments[prime] = C;
                 }
             }
-            if (clusterAssignments[i] !== minCluster) {
-                isConverged = false;
-            }
-            clusterAssignments[i] = minCluster;
-        }
-        // Update step
-        for (var i = 0; i < N; i++) {
-            clusters[i].weight = 0.0;
-        }
-        for (var i = 0; i < this.particles.length; i++) {
-            var pi = this.particles[i];
-            var j = clusterAssignments[i];
-            if (clusters[j].weight + pi.weight > 0) {
-                clusters[j].x = (clusters[j].x * clusters[j].weight +
-                        pi.state.x * pi.weight) / (clusters[j].weight + pi.weight);
-                clusters[j].y = (clusters[j].y * clusters[j].weight +
-                        pi.state.y * pi.weight) / (clusters[j].weight + pi.weight);
-                clusters[j].weight += pi.weight;
-            }
-        }
-        // Decrease max remaining steps
-        stepsRemaining--;
-    } while (!isConverged && stepsRemaining > 0);
-
-    return {
-        clusters: clusters,
-        assignments: clusterAssignments
-    };
-};
-
-
-AuxPhdFilter.prototype.silhouette = function () {
-    var bestSilhouette = -1.0;
-    var bestn = 2;
-    for (var n = 2; n < this.Nmax; n++) {
-        var silhouette = 0;
-        var clusterInfo = this.cluster(n);
-        for (var i = 0; i < this.particles.length; i++) {
-            var pi = this.particles[i];
-            var l1i = 0;
-            var w1i = 0;
-            for (var j = 0; j < this.particles.length; j++) {
-                if (clusterInfo.assignments[j] !== clusterInfo.assignments[i] ||
-                        i === j) {
-                    continue;
-                }
-                var pj = this.particles[j];
-                if (w1i + pi.weight * pj.weight > 0) {
-                    l1i = (l1i * w1i + distance(pi.state, pj.state) * pi.weight * pj.weight) /
-                            (w1i + pi.weight + pj.weight);
-                    w1i += pi.weight * pj.weight;
-                }
-            }
-
-            var l2i = 0;
-            var w2i = 0;
-            for (var j = 0; j < n; j++) {
-                if (j === clusterInfo.assignments[i]) {
-                    continue;
-                }
-                if (w2i + pi.weight * clusterInfo.clusters[j].weight > 0) {
-                    l2i = (l2i * w2i + distance(pi.state, clusterInfo.clusters[j]) * pi.weight * clusterInfo.clusters[j].weight) /
-                            (w2i + pi.weight * clusterInfo.clusters[j].weight);
-                    w2i += pi.weight * clusterInfo.clusters[j].weight;
-                }
-            }
-
-            silhouette += (l2i - l1i) / Math.max(l1i, l2i) / this.particles.length;
-        }
-
-        if (silhouette > bestSilhouette) {
-            bestSilhouette = silhouette;
-            bestn = n;
         }
     }
 
-    return bestn;
+    return assignments;
 };
+
+
+AuxPhdFilter.prototype.distanceMatrix = function () {
+    var dist = [];
+    for (var i = 0; i < this.particles.length; i++) {
+        dist[i] = [];
+        for (var j = i + 1; j < this.particles.length; j++) {
+            dist[i][j] = distance(this.particles[i].state, this.particles[j].state);
+        }
+    }
+    return dist;
+};
+
+function regionQuery(dist, index, eps) {
+    var result = [];
+    for (var i = 0; i < index; i++) {
+        if (dist[i][index] < eps) {
+            result.push(i);
+        }
+    }
+    for (var i = index + 1; i < dist[index].length; i++) {
+        if (dist[index][i] < eps) {
+            result.push(i);
+        }
+    }
+    return result;
+}
 
 
 function distance(pos1, pos2) {

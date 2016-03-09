@@ -15,23 +15,23 @@ function drawAuxPhd(auxPhd) {
         var size = 5.0;
         var alpha = Math.max(0, Math.min(1, particle.weight * auxPhd.particles.length) / 2);
         var pos = world_coordinates.transform(particle.state.x, particle.state.y);
-        if (auxPhd.clusters.length > 0) {
-            ctx.fillStyle = 'hsla(' + auxPhd.clusterAssignments[index] / auxPhd.clusters.length * 360.0 + ',50%,50%,' + alpha + ')';
+        if (auxPhd.clusterAssignments[index]) {
+            ctx.fillStyle = 'hsla(' + auxPhd.clusterAssignments[index] / 10.0 * 360.0 + ',50%,50%,' + alpha + ')';
         } else {
             ctx.fillStyle = 'rgba(100,100,100,' + alpha + ')';
         }
         ctx.fillRect(pos.x - 0.5 * size, pos.y - 0.5 * size, size, size);
     });
 
-    auxPhd.clusters.forEach(function (cluster, index) {
-        if (cluster.weight > 0.5) { // Only draw clusters with high probability
-            var pos = world_coordinates.transform(cluster.x, cluster.y);
-            var r = world_coordinates.transform(0.30);
-            ctx.strokeStyle = 'hsl(' + index / auxPhd.clusters.length * 360.0 + ',100%,50%)';
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-    });
+//    auxPhd.clusters.forEach(function (cluster, index) {
+//        if (cluster.weight > 0.5) { // Only draw clusters with high probability
+//            var pos = world_coordinates.transform(cluster.x, cluster.y);
+//            var r = world_coordinates.transform(0.30);
+//            ctx.strokeStyle = 'hsl(' + index / auxPhd.clusters.length * 360.0 + ',100%,50%)';
+//            ctx.beginPath();
+//            ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI);
+//            ctx.stroke();
+//        }
+//    });
 }
 ;
