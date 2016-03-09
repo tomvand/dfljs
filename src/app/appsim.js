@@ -10,7 +10,7 @@ var keyboard = require('../sim/keyboardcontroller.js');
 // Set up the tracking filter
 var NMaxTargets = 5;
 var NParticlesPerTarget = 200;
-var NAuxiliaryParticles = 200;
+var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 

@@ -102,31 +102,34 @@ AuxPhdFilter.prototype.observe = function (observations) {
     // 20-23: Weight update
     this.updateWeights(observations);
     // 24: Target number estimation
-    var assignments = this.DBSCAN();
-    this.Np = 2; // TODO
+    var clusterInfo = this.DBSCAN();
+    this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
+    this.clusters = clusterInfo.clusters;
     // 25: Resample
     var newParticles = [];
-    var totalWeight = 0.0;
-    for (var i = 0; i < this.particles.length; i++) {
-        totalWeight += this.particles[i].weight;
-    }
-    var x = Math.random() / (this.Np * this.Nppt);
-    var w = this.particles[0].weight;
-    var j = 0;
-    for (var i = 0; i < this.Np * this.Nppt; i++) {
-        var thres = (i / (this.Np * this.Nppt) + x) * totalWeight;
-        while (w < thres) {
-            j++;
-            w += this.particles[j].weight;
+    if (this.Np > 0) {
+        var totalWeight = 0.0;
+        for (var i = 0; i < this.particles.length; i++) {
+            totalWeight += this.particles[i].weight;
         }
-        newParticles[i] = {
-            state: clone(this.particles[j].state),
-            weight: 1 / this.Nppt
-        };
-        this.clusterAssignments[i] = assignments[j];
+        var x = Math.random() / (this.Np * this.Nppt);
+        var w = this.particles[0].weight;
+        var j = 0;
+        for (var i = 0; i < this.Np * this.Nppt; i++) {
+            var thres = (i / (this.Np * this.Nppt) + x) * totalWeight;
+            while (w < thres) {
+                j++;
+                w += this.particles[j].weight;
+            }
+            newParticles[i] = {
+                state: clone(this.particles[j].state),
+                weight: 1 / this.Nppt
+            };
+            // 26: Clustering
+            this.clusterAssignments[i] = clusterInfo.assignments[j];
+        }
     }
     this.particles = newParticles;
-    // 26: Clustering
 };
 
 
@@ -184,6 +187,7 @@ AuxPhdFilter.prototype.DBSCAN = function () {
     // 0: outlier
     // 1-n: cluster
     var assignments = [];
+    var clusters = [undefined];
     var C = 0;
 
     for (var i = 0; i < this.particles.length; i++) {
@@ -194,8 +198,14 @@ AuxPhdFilter.prototype.DBSCAN = function () {
         var neighbourIndices = regionQuery(dist, i, this.eps);
         if (neighbourIndices.length >= this.minPts) {
             C++;
+            clusters[C] = {
+                x: 0,
+                y: 0,
+                weight: 0
+            };
             // Expand cluster
             assignments[i] = C;
+            addWeightedPosition(clusters[C], this.particles[i]);
             for (var j = 0; j < neighbourIndices.length; j++) {
                 var prime = neighbourIndices[j];
                 if (assignments[prime] === undefined) {
@@ -207,12 +217,16 @@ AuxPhdFilter.prototype.DBSCAN = function () {
                 }
                 if (assignments[prime] === 0) {
                     assignments[prime] = C;
+                    addWeightedPosition(clusters[C], this.particles[prime]);
                 }
             }
         }
     }
 
-    return assignments;
+    return {
+        clusters: clusters,
+        assignments: assignments
+    };
 };
 
 
@@ -240,6 +254,16 @@ function regionQuery(dist, index, eps) {
         }
     }
     return result;
+}
+
+function addWeightedPosition(cluster, particle) {
+    if (cluster.weight + particle.weight > 0) {
+        cluster.x = (cluster.x * cluster.weight + particle.state.x * particle.weight) /
+                (cluster.weight + particle.weight);
+        cluster.y = (cluster.y * cluster.weight + particle.state.y * particle.weight) /
+                (cluster.weight + particle.weight);
+        cluster.weight += particle.weight;
+    }
 }
 
 
