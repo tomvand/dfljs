@@ -16,10 +16,10 @@ State.prototype.initialize = function (initInfo) {
 
 State.prototype.predict = function (deltaT) {
     var isStationary = Math.abs(this.speed) < 0.05;
-    if (isStationary && Math.random() < 0.01) {
+    if (isStationary && Math.random() < 0.10) {
         this.direction = 2 * Math.PI * Math.random();
         this.speed = 0.5 + 0.7 * randn();
-    } else if (!isStationary && Math.random() < 0.05) {
+    } else if (!isStationary && Math.random() < 0.10) {
         this.speed = 0.0;
     }
     this.direction += 0.10 * Math.PI * randn();

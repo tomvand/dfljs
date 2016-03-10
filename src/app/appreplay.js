@@ -1,5 +1,5 @@
 /* global log */
-require('../device/replay/log-2016-03-02.json');
+require('../device/replay/log-2016-03-09.json');
 
 var replay = require('../device/replay/replay.js');
 var rssifilter = require('../device/filter.js');
@@ -19,8 +19,8 @@ function getMeasurements() {
 
 // Set up the tracking filter
 var NMaxTargets = 5;
-var NParticlesperTarget = 50;
-var NAuxiliaryParticles = 100;
+var NParticlesperTarget = 200;
+var NAuxiliaryParticles = 400;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesperTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
@@ -42,20 +42,15 @@ while (!state.measurements.length) {
 // Set up measurement updates
 var meas_period = 1.000;
 setInterval(function () {
+    // Update the ALM filter
+    alm.predict(meas_period);
     // Update measurements
     state.measurements = getMeasurements();
     document.getElementById('clock').innerHTML = new Date(replay.getCurrentTime() * 1000);
     // Update ALM filter
     alm.observe(state.measurements);
     document.getElementById('filter').innerHTML = alm.total_weight;
-}, meas_period * 1000);
-
-// Set up time updates
-var time_period = 0.100;
-setInterval(function () {
     // Draw the current state
     draw.draw(state);
     drawAuxPhd(alm);
-    // Update the ALM filter
-    alm.predict(time_period);
-}, time_period * 1000);
+}, meas_period * 1000);

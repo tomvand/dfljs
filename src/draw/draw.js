@@ -193,11 +193,9 @@ function drawMeasurement(measurement) {
     var red = measurement.delta_rssi < 0 ? 255 : 0;
     ctx.fillStyle = 'rgba(' + red + ', 0, 0, ' + alpha + ')';
     ctx.fill();
-    if (measurement.isBlocked) {
-        ctx.strokeWidth = '2px';
-        ctx.strokeStyle = 'red';
-        ctx.stroke();
-    }
+    ctx.strokeStyle = measurement.isOutlier ? 'red' : 'black';
+    ctx.strokeWidth = '2px';
+    ctx.stroke();
 
 
     ctx.font = FONT_LABEL;
