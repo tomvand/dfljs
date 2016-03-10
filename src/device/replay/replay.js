@@ -8,19 +8,50 @@
 "use strict";
 
 module.exports.open = open;
+module.exports.start = start;
+module.exports.handleThis = handleThis;
 module.exports.getMeasurements = getMeasurements;
 module.exports.getCurrentTime = getCurrentTime;
 
 var log;
-var currentTime;
 
-function open(log_obj) {
+var timestamps;
+var index;
+var callback;
+
+function open(log_obj, cb) {
     log = log_obj;
-    currentTime = log_obj.startTimestamp;
+    timestamps = Object.keys(log.data).sort();
+    index = 1;
+    callback = cb;
+}
+
+function start() {
+    run();
+}
+
+function run() {
+    // Set up the next event
+    if (index + 1 >= timestamps.length) {
+        return;
+    }
+    var delta = (timestamps[index + 1] - timestamps[index]) * 1000;
+    console.log(timestamps[index]);
+    console.log(delta);
+    setTimeout(run, delta);
+    // Handle the current event
+    handleThis();
+}
+
+function handleThis() {
+    // Handle the current event
+    callback(timestamps[index] - timestamps[index - 1]);
+    // Increment index
+    index++;
 }
 
 function getCurrentTime() {
-    return currentTime;
+    return timestamps[index];
 }
 
 /**
@@ -29,11 +60,7 @@ function getCurrentTime() {
  * @returns {undefined}
  */
 function getMeasurements(beacons) {
-    if (currentTime > log.endTimestamp) {
-        return [];
-    }
-
-    var now = log.data[currentTime.toString() + '.0'];
+    var now = log.data[timestamps[index]];
     var measurements = []; // Array of {receiver, transmitter, rssi}
 
     for (var rxAddress in now) {
@@ -45,8 +72,5 @@ function getMeasurements(beacons) {
             });
         }
     }
-
-    currentTime++;
-
     return measurements;
 }
