@@ -8,8 +8,8 @@
 "use strict";
 
 module.exports.open = open;
-module.exports.start = start;
-module.exports.handleThis = handleThis;
+module.exports.run = run;
+module.exports.runOnce = runOnce;
 module.exports.getMeasurements = getMeasurements;
 module.exports.getCurrentTime = getCurrentTime;
 
@@ -26,11 +26,10 @@ function open(log_obj, cb) {
     callback = cb;
 }
 
-function start() {
-    run();
-}
-
-function run() {
+function run(cb) {
+    if (cb) {
+        callback = cb;
+    }
     // Set up the next event
     if (index + 1 >= timestamps.length) {
         return;
@@ -40,10 +39,13 @@ function run() {
     console.log(delta);
     setTimeout(run, delta);
     // Handle the current event
-    handleThis();
+    runOnce();
 }
 
-function handleThis() {
+function runOnce(cb) {
+    if (cb) {
+        callback = cb;
+    }
     // Handle the current event
     callback(timestamps[index] - timestamps[index - 1]);
     // Increment index
