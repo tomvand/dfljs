@@ -1,12 +1,12 @@
 /* global log */
-require('../device/replay/log-2016-03-11.json');
+require('../device/replay/log-2016-03-14.json');
 
 var replay = require('../device/replay/replay.js');
 var rssifilter = require('../device/filter.js');
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAuxPhd = require('../draw/draw_auxphd.js');
-var environment = require('./environment/office_small.js');
+var environment = require('./environment/first_floor.js');
 
 // Set up the replay device
 replay.open(log, update); // Note: variable 'log' is set by including log.json in index.html.
@@ -26,7 +26,7 @@ var alm = new AuxPhd(NMaxTargets, NParticlesperTarget, NAuxiliaryParticles, init
 
 // Set up drawing
 draw.attach(document.getElementById('canvas'));
-draw.setView(2.05, -5.05, 4, 6);
+draw.setView(-1.0, -9.0, 7.5, 10.0);
 
 // Get measurements until one of the filters is fully initialized and
 // returning data.
@@ -66,8 +66,7 @@ while (!firstMeasurementReceived) {
     replay.runOnce();
 }
 
-// Start at 10:25:10
-var dateStart = 1457700180000; // 2016-03-10 10:25:00 CET
+var dateStart = 1457957400000; // 2016-03-14 13:10:00 CET
 function startAtTime() {
     if (replay.getCurrentTime() * 1000 < dateStart) {
         replay.runOnce(updateAndDraw);
