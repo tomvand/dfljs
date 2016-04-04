@@ -83,14 +83,14 @@ function subtractBackground(linkRSSI) {
 //                // Update the filter if this is not an outlier.
 //                filter.filter(link.rssi);
 //            }
-            if (link.rssi < filter.average()) {
-                observations.push({
-                    beacons: link.beacons,
-                    delta_rssi: link.rssi - filter.average(),
-                    isOutlier: isOutlier,
-                    link_variance: variance
-                });
-            }
+//            if (link.rssi < filter.average()) {
+            observations.push({
+                beacons: link.beacons,
+                delta_rssi: link.rssi - filter.average(),
+                isOutlier: isOutlier,
+                link_variance: variance
+            });
+//            }
         }
     });
     return observations;
