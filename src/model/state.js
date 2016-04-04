@@ -41,5 +41,5 @@ State.prototype.survive = function () {
 };
 
 State.prototype.birth = function () {
-    return 0.05;
+    return 0.2;
 };
