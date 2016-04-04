@@ -52,16 +52,10 @@ setInterval(function () {
         });
     });
     // Update ALM filter
+    alm.predict(meas_period);
     alm.observe(state.measurements);
     document.getElementById('filter').innerHTML = alm.total_weight;
-}, meas_period * 1000);
-
-// Set up time updates
-var time_period = 0.100;
-setInterval(function () {
     // Draw the current state
     draw.draw(state);
     drawAuxPhd(alm);
-    // Update the ALM filter
-    alm.predict(time_period);
-}, time_period * 1000);
+}, meas_period * 1000);
