@@ -1,5 +1,5 @@
 /* global log */
-require('../device/replay/log-2016-03-14.json');
+require('../device/replay/log-2016-03-15.json');
 
 var replay = require('../device/replay/replay.js');
 var rssifilter = require('../device/filter.js');
@@ -66,7 +66,7 @@ while (!firstMeasurementReceived) {
     replay.runOnce();
 }
 
-var dateStart = 1457957400000; // 2016-03-14 13:10:00 CET
+var dateStart = 1458043980000; // 2016-03-15 13:13:00 CET
 function startAtTime() {
     if (replay.getCurrentTime() * 1000 < dateStart) {
         replay.runOnce(updateAndDraw);

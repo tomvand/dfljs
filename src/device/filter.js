@@ -79,16 +79,18 @@ function subtractBackground(linkRSSI) {
             var variance = Math.max(settings.minimum_variance, filter.variance());
             var isOutlier = link.rssi > filter.average() + settings.r * variance ||
                     link.rssi < filter.average() - settings.r * variance;
-            if (!isOutlier) {
-                // Update the filter if this is not an outlier.
-                filter.filter(link.rssi);
+//            if (!isOutlier) {
+//                // Update the filter if this is not an outlier.
+//                filter.filter(link.rssi);
+//            }
+            if (link.rssi < filter.average()) {
+                observations.push({
+                    beacons: link.beacons,
+                    delta_rssi: link.rssi - filter.average(),
+                    isOutlier: isOutlier,
+                    link_variance: variance
+                });
             }
-            observations.push({
-                beacons: link.beacons,
-                delta_rssi: link.rssi - filter.average(),
-                isOutlier: isOutlier,
-                link_variance: variance
-            });
         }
     });
     return observations;
