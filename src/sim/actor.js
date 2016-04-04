@@ -24,3 +24,9 @@ Actor.prototype.move = function (angle, distance) {
     this.x += distance * Math.cos(this.direction);
     this.y += distance * Math.sin(this.direction);
 };
+
+Actor.prototype.move_cart = function (dx, dy) {
+    this.x += dx;
+    this.y += dy;
+    this.direction = Math.atan2(dy, dx);
+};

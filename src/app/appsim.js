@@ -6,6 +6,7 @@ var environment = require('./environment/office_full.js');
 var Actor = require('../sim/actor.js');
 var measure = require('../sim/measure.js');
 var keyboard = require('../sim/keyboardcontroller.js');
+var RandomController = require('../sim/randomcontroller.js');
 
 // Set up the tracking filter
 var NMaxTargets = 5;
@@ -15,12 +16,15 @@ var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
 // Set up actors
-var actor = new Actor(2.0, 5.0, 0.0);
-var stationary = new Actor(6.0, 3.0, Math.PI);
-var actors = [actor, stationary];
+var actors = [
+    new Actor(2.0, 5.0, 0.0),
+    new Actor(6.0, 3.0, Math.PI)
+];
+var actor_controllers = [];
+actors.forEach(function (actor) {
+    actor_controllers.push(new RandomController(actor));
+});
 
-document.onkeydown = keyboard.onKeyPress;
-keyboard.posess(actor);
 
 // Set up simulation state
 var state = {
@@ -34,9 +38,13 @@ draw.attach(document.getElementById('canvas'));
 draw.setView(-1, -13.4, 10.2, 14.4);
 
 // Set up measurement updates
-var meas_period = 1.000;
+var meas_period = 0.25;
 var meas_probability = 0.40;
 setInterval(function () {
+    // Update actors
+    actor_controllers.forEach(function (controller) {
+        controller.update(meas_period);
+    });
     // Update measurements
     state.measurements = [];
     environment.beacons.forEach(function (receiver) {
