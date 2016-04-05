@@ -8,6 +8,8 @@ var measure = require('../sim/measure.js');
 var keyboard = require('../sim/keyboardcontroller.js');
 var RandomController = require('../sim/randomcontroller.js');
 
+var clone = require('clone');
+
 // Set up the tracking filter
 var NMaxTargets = 5;
 var NParticlesPerTarget = 500;
@@ -37,6 +39,11 @@ var state = {
 draw.attach(document.getElementById('canvas'));
 draw.setView(-1, -13.4, 10.2, 14.4);
 
+// Set up recording
+recording = []; // Format: [{timestamp, actors, clusters}]
+current_time = 0.0;
+record_time = 20.0;
+
 // Set up measurement updates
 var meas_period = 0.25;
 var meas_probability = 0.40;
@@ -62,8 +69,18 @@ setInterval(function () {
     // Update ALM filter
     alm.predict(meas_period);
     alm.observe(state.measurements);
-    document.getElementById('filter').innerHTML = alm.total_weight;
     // Draw the current state
     draw.draw(state);
     drawAuxPhd(alm);
+    // Record the current state and estimation
+    recording.push({
+        timestamp: current_time,
+        actors: clone(actors),
+        clusters: clone(alm.clusters)
+    });
+    if (current_time >= record_time) {
+        document.getElementById('filter').innerHTML = JSON.stringify(recording);
+        current_time = undefined;
+    }
+    current_time += meas_period;
 }, meas_period * 1000);
