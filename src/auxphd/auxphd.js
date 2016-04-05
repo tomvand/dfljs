@@ -52,9 +52,9 @@ AuxPhdFilter.prototype.predict = function (deltaT) {
     for (var i = 0; i < Npk; i++) {
         this.particles[i].state.predict(deltaT);
         this.particles[i].weight *= this.particles[i].state.survive();
-//        if (!(this.clusterAssignments[i] > 0)) {
-//            this.particles[i].weight *= 0.20;
-//        }
+        if (!(this.clusterAssignments[i] > 0)) {
+            this.particles[i].weight *= 0.20;
+        }
     }
 };
 
@@ -105,9 +105,9 @@ AuxPhdFilter.prototype.observe = function (observations) {
     // 20-23: Weight update
     this.updateWeights(observations);
     // 24: Target number estimation
-//    var clusterInfo = this.DBSCAN();
-//    this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
-    this.Np = 2;
+    var clusterInfo = this.DBSCAN();
+    this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
+//    this.Np = 2;
     // 25: Resample
     var newParticles = [];
     if (this.Np > 0) {
@@ -132,9 +132,9 @@ AuxPhdFilter.prototype.observe = function (observations) {
     }
     this.particles = newParticles;
     // 26: Clustering
-//    clusterInfo = this.DBSCAN();
-    this.clusters = [];
-    this.clusterAssignments = [];
+    clusterInfo = this.DBSCAN();
+    this.clusters = clusterInfo.clusters;
+    this.clusterAssignments = clusterInfo.assignments;
 };
 
 
