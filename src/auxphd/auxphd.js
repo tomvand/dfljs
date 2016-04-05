@@ -25,7 +25,7 @@ function AuxPhdFilter(maxTargets, particlesPerTarget, auxiliaryParticles, initIn
     this.initInfo = initInfo;
     this.bounds = bounds;
 
-    this.eps = 0.4;
+    this.eps = 0.6;
     this.minPts = 0.2 * particlesPerTarget;
 
     this.clusters = [];
@@ -107,7 +107,6 @@ AuxPhdFilter.prototype.observe = function (observations) {
     // 24: Target number estimation
     var clusterInfo = this.DBSCAN();
     this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
-    this.Np = 2;
     // 25: Resample
     var newParticles = [];
     if (this.Np > 0) {
