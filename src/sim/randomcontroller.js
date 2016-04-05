@@ -6,7 +6,7 @@ function RandomController(actor) {
     var std_v0 = 0.0;
     this.vx = std_v0 * randn();
     this.vy = std_v0 * randn();
-    this.sigma_v = Math.sqrt(0.35) / 10;
+    this.sigma_v = Math.sqrt(0.1);
 
     this.controlled_actor = actor;
 }

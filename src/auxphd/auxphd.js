@@ -25,8 +25,8 @@ function AuxPhdFilter(maxTargets, particlesPerTarget, auxiliaryParticles, initIn
     this.initInfo = initInfo;
     this.bounds = bounds;
 
-    this.eps = 0.3;
-    this.minPts = 0.10 * particlesPerTarget;
+    this.eps = 0.4;
+    this.minPts = 0.2 * particlesPerTarget;
 
     this.clusters = [];
     this.clusterAssignments = [];
