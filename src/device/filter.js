@@ -86,7 +86,7 @@ function subtractBackground(linkRSSI) {
 //            if (link.rssi < filter.average()) {
             observations.push({
                 beacons: link.beacons,
-                delta_rssi: link.rssi - filter.average(),
+                delta_rssi: -Math.abs(link.rssi - filter.average()),
                 isOutlier: isOutlier,
                 link_variance: variance
             });
