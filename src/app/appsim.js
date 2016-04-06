@@ -1,7 +1,7 @@
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAuxPhd = require('../draw/draw_auxphd.js');
-var environment = require('./environment/office_full.js');
+var environment = require('./environment/nannuru_setup1.js');
 
 var Actor = require('../sim/actor.js');
 var measure = require('../sim/measure.js');
@@ -39,7 +39,7 @@ var state = {
 
 // Set up drawing
 draw.attach(document.getElementById('canvas'));
-draw.setView(-1, -13.4, 10.2, 14.4);
+draw.setView(-1, -9, 10, 10);
 
 // Set up measurement updates
 var meas_period = 0.25;
