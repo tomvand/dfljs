@@ -2,9 +2,14 @@ module.exports = State;
 
 randn = require('../util/randn.js');
 
-function State(initInfo) {
+function State(initInfo, jumpstate) {
     this.initInfo = initInfo;
     this.initialize(initInfo);
+    if (jumpstate) {
+        this.predict = predict_jumpstate;
+    } else {
+        this.predict = predict_random;
+    }
 }
 
 State.prototype.initialize = function (initInfo) {
@@ -14,7 +19,13 @@ State.prototype.initialize = function (initInfo) {
     this.speed = 0.0;
 };
 
-State.prototype.predict = function (deltaT) {
+function predict_random(deltaT) {
+    var sigma_v = 1.5;
+    this.x += sigma_v * randn() * deltaT;
+    this.y += sigma_v * randn() * deltaT;
+}
+
+function predict_jumpstate(deltaT) {
     var isStationary = Math.abs(this.speed) < 0.05;
     if (isStationary && Math.random() < 0.10) {
         this.direction = 2 * Math.PI * Math.random();
@@ -26,7 +37,8 @@ State.prototype.predict = function (deltaT) {
 
     this.x += Math.cos(this.direction) * this.speed * deltaT;
     this.y += Math.sin(this.direction) * this.speed * deltaT;
-};
+}
+;
 
 State.prototype.survive = function () {
     var isInBounds = this.x >= this.initInfo.xmin &&
