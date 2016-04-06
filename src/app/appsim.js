@@ -1,7 +1,7 @@
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAuxPhd = require('../draw/draw_auxphd.js');
-var environment = require('./environment/first_floor.js');
+var environment = require('./environment/nannuru_setup1.js');
 
 var Actor = require('../sim/actor.js');
 var measure = require('../sim/measure.js');
@@ -18,6 +18,8 @@ var NParticlesPerTarget = 100;
 var NAuxiliaryParticles = 100;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
+
+alm.fixedNumberOfTargets = 2;
 
 // Set up actors
 var actors = [
