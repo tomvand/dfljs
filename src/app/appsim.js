@@ -29,6 +29,10 @@ var actors = [
     new Actor(
             environment.bounds.xmin + Math.random() * (environment.bounds.xmax - environment.bounds.xmin),
             environment.bounds.ymin + Math.random() * (environment.bounds.ymax - environment.bounds.ymin),
+            Math.random() * 2 * Math.PI),
+    new Actor(
+            environment.bounds.xmin + Math.random() * (environment.bounds.xmax - environment.bounds.xmin),
+            environment.bounds.ymin + Math.random() * (environment.bounds.ymax - environment.bounds.ymin),
             Math.random() * 2 * Math.PI)
 ];
 var actor_controllers = [];
