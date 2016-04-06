@@ -22,11 +22,11 @@ RandomController.prototype.update = function (deltaT, bounds) {
     if (bounds) {
         if ((this.vx < 0 && this.controlled_actor.x < bounds.xmin + 1.0) ||
                 (this.vx > 0 && this.controlled_actor.x > bounds.xmax - 1.0)) {
-            this.vx = -this.vx;
+            this.vx = -0.5 * this.vx;
         }
         if ((this.vy < 0 && this.controlled_actor.y < bounds.ymin + 1.0) ||
                 (this.vy > 0 && this.controlled_actor.y > bounds.ymax - 1.0)) {
-            this.vy = -this.vy;
+            this.vy = -0.5 * this.vy;
         }
     }
 };
