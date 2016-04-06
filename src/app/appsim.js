@@ -18,7 +18,6 @@ var NParticlesPerTarget = 500;
 var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
-alm.clusterMethod = 'kmeans'
 
 // Set up actors
 var actors = [
