@@ -30,6 +30,9 @@ function AuxPhdFilter(maxTargets, particlesPerTarget, auxiliaryParticles, initIn
 
     this.clusters = [];
     this.clusterAssignments = [];
+
+    this.clusterMethod = 'dbscan'; // 'dbscan' or 'kmeans'
+    this.fixedNumberOfTargets = null;
 }
 
 AuxPhdFilter.prototype.initialize = function (initInfo) {
@@ -105,8 +108,17 @@ AuxPhdFilter.prototype.observe = function (observations) {
     // 20-23: Weight update
     this.updateWeights(observations);
     // 24: Target number estimation
-    var clusterInfo = this.DBSCAN();
-    this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
+    if (this.fixedNumberOfTargets) {
+        this.Np = this.fixedNumberOfTargets;
+    } else {
+        var clusterInfo;
+        if (this.clusterMethod === 'dbscan') {
+            clusterInfo = this.DBSCAN();
+        } else {
+            clusterInfo = this.kmeans(this.best_silhouette());
+        }
+        this.Np = Math.min(this.Nmax, clusterInfo.clusters.length - 1);
+    }
     // 25: Resample
     var newParticles = [];
     if (this.Np > 0) {
@@ -131,7 +143,15 @@ AuxPhdFilter.prototype.observe = function (observations) {
     }
     this.particles = newParticles;
     // 26: Clustering
-    clusterInfo = this.DBSCAN();
+    if (this.fixedNumberOfTargets) {
+        clusterInfo = this.kmeans(this.Np);
+    } else {
+        if (this.clusterMethod === 'dbscan') {
+            clusterInfo = this.DBSCAN();
+        } else {
+            clusterInfo = this.kmeans(this.best_silhouette());
+        }
+    }
     this.clusters = clusterInfo.clusters;
     this.clusterAssignments = clusterInfo.assignments;
 };
@@ -187,7 +207,7 @@ AuxPhdFilter.prototype.kmeans = function (N) {
     // Prepare for clustering
     var clusters = [];
     var clusterAssignments = [];
-    for (var i = 0; i < N; i++) {
+    for (var i = 0; i < N + 1; i++) {
         if (this.clusters[i]) {
             clusters[i] = clone(this.clusters[i]);
             clusters[i].weight = 0;
@@ -210,7 +230,7 @@ AuxPhdFilter.prototype.kmeans = function (N) {
             var pi = this.particles[i];
             var minDist = Number.POSITIVE_INFINITY;
             var minCluster = 0;
-            for (var j = 0; j < N; j++) {
+            for (var j = 1; j < N + 1; j++) {
                 var dist = distance(pi.state, clusters[j]);
                 if (dist < minDist) {
                     minDist = dist;
@@ -248,12 +268,12 @@ AuxPhdFilter.prototype.kmeans = function (N) {
 };
 
 
-AuxPhdFilter.prototype.silhouette = function () {
+AuxPhdFilter.prototype.best_silhouette = function () {
     var bestSilhouette = -1.0;
     var bestn = 2;
     for (var n = 2; n < this.Nmax; n++) {
         var silhouette = 0;
-        var clusterInfo = this.cluster(n);
+        var clusterInfo = this.kmeans(n);
         for (var i = 0; i < this.particles.length; i++) {
             var pi = this.particles[i];
             var l1i = 0;
