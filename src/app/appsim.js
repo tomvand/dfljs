@@ -18,8 +18,7 @@ var NParticlesPerTarget = 500;
 var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
-
-alm.fixedNumberOfTargets = 2;
+alm.clusterMethod = 'kmeans'
 
 // Set up actors
 var actors = [
@@ -84,7 +83,7 @@ current_time = 0.0;
 interval = setInterval(function () {
     // Update actors
     actor_controllers.forEach(function (controller) {
-        controller.update(meas_period, environment.bounds);
+        controller.update(meas_period);
     });
     // Update measurements
     state.measurements = [];
