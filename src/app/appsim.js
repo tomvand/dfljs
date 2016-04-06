@@ -1,7 +1,7 @@
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAuxPhd = require('../draw/draw_auxphd.js');
-var environment = require('./environment/nannuru_setup1.js');
+var environment = require('./environment/first_floor.js');
 
 var Actor = require('../sim/actor.js');
 var measure = require('../sim/measure.js');
@@ -14,8 +14,8 @@ var clone = require('clone');
 
 // Set up the tracking filter
 var NMaxTargets = 5;
-var NParticlesPerTarget = 100;
-var NAuxiliaryParticles = 100;
+var NParticlesPerTarget = 500;
+var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
