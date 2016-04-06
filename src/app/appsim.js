@@ -1,7 +1,7 @@
 var AuxPhd = require('../auxphd/auxphd.js');
 var draw = require('../draw/draw.js');
 var drawAuxPhd = require('../draw/draw_auxphd.js');
-var environment = require('./environment/nannuru_setup1.js');
+var environment = require('./environment/first_floor.js');
 
 var Actor = require('../sim/actor.js');
 var measure = require('../sim/measure.js');
@@ -21,8 +21,14 @@ var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, init
 
 // Set up actors
 var actors = [
-    new Actor(2.0, 5.0, 0.0),
-    new Actor(6.0, 3.0, Math.PI)
+    new Actor(
+            environment.bounds.xmin + Math.random() * (environment.bounds.xmax - environment.bounds.xmin),
+            environment.bounds.ymin + Math.random() * (environment.bounds.ymax - environment.bounds.ymin),
+            Math.random() * 2 * Math.PI),
+    new Actor(
+            environment.bounds.xmin + Math.random() * (environment.bounds.xmax - environment.bounds.xmin),
+            environment.bounds.ymin + Math.random() * (environment.bounds.ymax - environment.bounds.ymin),
+            Math.random() * 2 * Math.PI)
 ];
 var actor_controllers = [];
 actors.forEach(function (actor) {
@@ -39,7 +45,10 @@ var state = {
 
 // Set up drawing
 draw.attach(document.getElementById('canvas'));
-draw.setView(-1, -9, 10, 10);
+draw.setView(environment.bounds.xmin - 1.0,
+        -environment.bounds.ymax - 1.0,
+        environment.bounds.xmax - environment.bounds.xmin + 2.0,
+        environment.bounds.ymax - environment.bounds.ymin + 2.0);
 
 // Set up measurement updates
 var meas_period = 0.25;
@@ -71,7 +80,7 @@ current_time = 0.0;
 interval = setInterval(function () {
     // Update actors
     actor_controllers.forEach(function (controller) {
-        controller.update(meas_period);
+        controller.update(meas_period, environment.bounds);
     });
     // Update measurements
     state.measurements = [];

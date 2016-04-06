@@ -7,6 +7,8 @@ exports.beacons = [
     {x: 0.60 + 4.35 + 0.65 - 0.70, y: 0.0, address: 'C0:D1:8D:33:4E:29'}
 ];
 
+exports.all_beacons = exports.beacons;
+
 exports.bounds = {
     xmin: 0.00,
     xmax: 0.60 + 4.35 + 0.65,
