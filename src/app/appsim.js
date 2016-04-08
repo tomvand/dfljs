@@ -19,7 +19,7 @@ var NAuxiliaryParticles = 500;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
-alm.fixedNumberOfTargets = 2;
+
 
 // Set up actors
 var actors = [
