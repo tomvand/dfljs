@@ -14,8 +14,8 @@ var clone = require('clone');
 
 // Set up the tracking filter
 var NMaxTargets = 5;
-var NParticlesPerTarget = 500;
-var NAuxiliaryParticles = 500;
+var NParticlesPerTarget = 100;
+var NAuxiliaryParticles = 100;
 var initInfo = environment.bounds;
 var alm = new AuxPhd(NMaxTargets, NParticlesPerTarget, NAuxiliaryParticles, initInfo, environment.bounds);
 
@@ -26,16 +26,11 @@ var actors = [
     new Actor(
             environment.bounds.xmin + Math.random() * (environment.bounds.xmax - environment.bounds.xmin),
             environment.bounds.ymin + Math.random() * (environment.bounds.ymax - environment.bounds.ymin),
-            Math.random() * 2 * Math.PI),
-    new Actor(
-            environment.bounds.xmin + Math.random() * (environment.bounds.xmax - environment.bounds.xmin),
-            environment.bounds.ymin + Math.random() * (environment.bounds.ymax - environment.bounds.ymin),
             Math.random() * 2 * Math.PI)
 ];
-var actor_controllers = [];
-actors.forEach(function (actor) {
-    actor_controllers.push(new RandomController(actor));
-});
+
+document.onkeydown = keyboard.onKeyPress;
+keyboard.posess(actors[0]);
 
 
 // Set up simulation state
@@ -56,36 +51,7 @@ draw.setView(environment.bounds.xmin - 1.0,
 var meas_period = 0.25;
 var meas_probability = 0.40;
 
-// Set up recording
-record_start = 0.0;
-record_end = 10.0;
-recording = {
-    info: {
-        Nppt: NParticlesPerTarget,
-        Naux: NAuxiliaryParticles,
-        Ts: meas_period,
-        meas_prob: meas_probability,
-        Tstart: record_start,
-        Tend: record_end,
-        obs: observation_model.params,
-        meas: measure.params,
-        bounds: environment.bounds,
-        beacons: environment.beacons,
-        beacons_tx: environment.tx_only,
-        filter_eps: alm.eps,
-        filter_minpoints: alm.minPts,
-        clusterMethod: alm.clusterMethod,
-        fixedNumberOfTargets: alm.fixedNumberOfTargets
-    },
-    log: []
-}; // Log format: [{timestamp, actors, clusters}]
-current_time = 0.0;
-
 interval = setInterval(function () {
-    // Update actors
-    actor_controllers.forEach(function (controller) {
-        controller.update(meas_period, environment.bounds);
-    });
     // Update measurements
     state.measurements = [];
     environment.beacons.forEach(function (receiver) {
@@ -106,20 +72,4 @@ interval = setInterval(function () {
     // Draw the current state
     draw.draw(state);
     drawAuxPhd(alm);
-    // Record the current state and estimation
-    document.getElementById('clock').innerHTML = current_time;
-    if (current_time >= record_start) {
-        recording.log.push({
-            timestamp: current_time,
-            actors: clone(actors),
-            clusters: clone(alm.clusters)
-        });
-    }
-    if (current_time >= record_end) {
-        document.getElementById('filter').innerHTML = JSON.stringify(recording, null, '\t')
-                .replace(/\n/g, '<br />')
-                .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
-        clearInterval(interval);
-    }
-    current_time += meas_period;
 }, meas_period * 1000);
