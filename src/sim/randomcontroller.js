@@ -1,7 +1,18 @@
+/**
+ * Random Controller module
+ *
+ * Controller that will send random movements to actors.
+ */
+
 module.exports = RandomController;
 
 var randn = require('../util/randn.js');
 
+/**
+ * Instantiate random controller and attach to actor.
+ * @param {type} actor
+ * @returns {nm$_randomcontroller.RandomController}
+ */
 function RandomController(actor) {
     var std_v0 = 0.0;
     this.vx = std_v0 * randn();
@@ -11,6 +22,11 @@ function RandomController(actor) {
     this.controlled_actor = actor;
 }
 
+/**
+ * Randomly move the actor.
+ * @param {number} deltaT - Length of timestep
+ * @param {object} bounds - Environment bounds, or null if the actor is allowed to leave the environment
+ */
 RandomController.prototype.update = function (deltaT, bounds) {
     var ax = this.sigma_v * randn();
     var ay = this.sigma_v * randn();

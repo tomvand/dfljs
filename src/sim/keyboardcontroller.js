@@ -16,10 +16,9 @@ function posess(actor) {
 }
 
 /**
- * Handle keypresses by sending the corresponding movement to th eposessed actor.
+ * Handle keypresses by sending the corresponding movement to the posessed actor.
  * @function
- * @param {type} event
- * @returns {undefined}
+ * @param {type} event - Event data as given by 'document.onkeydown'
  */
 function onKeyPress(event) {
     if (!controlled_actor) {

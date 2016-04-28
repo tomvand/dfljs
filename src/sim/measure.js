@@ -1,29 +1,36 @@
 var randn = require('../util/randn.js');
+var obs = require('../model/observation.js');
+
+var lambda = obs.lambda;
 
 exports.measure = measure;
 
-/**
- * @property {number} phi Attenuation in dB.
- * @property {number} sigma_l Beam width.
- */
+
 // measure.js provides its own measurement model and parameters, so a mismatch
 // between the world an tracking filter can be simulated.
+/**
+ * Measurement model parameters
+ */
 var params = {
+    /**
+     * Max attenuation in dB by a single target
+     */
     phi: -9.0,
+    /**
+     * Width of the measurement region
+     */
     sigma_l: 0.2,
+    /**
+     * Standard deviation of noise on RSSI measurements
+     */
     sigma_z: 1.0
 };
 exports.params = params;
 
-/**
- * @typedef Measurement
- * @property {Beacon} receiver - beacon from which the measurement is performed
- * @property {Beacon} transmitter - beacon that is observed
- * @property {number} delta_rssi - change in rssi in dB
- */
+
 
 /**
- *
+ * Perform measurement between two beacons obstructed by actors.
  * @param {Beacon} receiver - beacon from which the measurement is performed
  * @param {Beacon} transmitter - beacon that is observed
  * @param {Actor[]} actors - actors that can interfere with the signal
@@ -42,12 +49,4 @@ function measure(receiver, transmitter, actors) {
         delta_rssi: delta_rssi,
         link_variance: params.sigma_z
     };
-}
-
-function distance(x1, y1, x2, y2) {
-    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-}
-
-function lambda(from, to, actor) {
-    return distance(from.x, from.y, actor.x, actor.y) + distance(to.x, to.y, actor.x, actor.y) - distance(from.x, from.y, to.x, to.y);
 }

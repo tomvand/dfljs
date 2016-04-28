@@ -8,6 +8,9 @@ exports.observe_all = observe_all;
 
 exports.observe = observe;
 
+exports.lambda = lambda;
+exports.distance = distance;
+
 function observe_all(beacons, states) {
     var observation = [];
     for (i = 0; i < beacons.length; i++) {

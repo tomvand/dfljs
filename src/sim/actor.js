@@ -25,6 +25,11 @@ Actor.prototype.move = function (angle, distance) {
     this.y += distance * Math.sin(this.direction);
 };
 
+/**
+ * Moves the actor by the given change in x- and y-coordinates.
+ * @param {type} dx
+ * @param {type} dy
+ */
 Actor.prototype.move_cart = function (dx, dy) {
     this.x += dx;
     this.y += dy;
