@@ -11,18 +11,43 @@ var RunVar = require('../util/runningvariance.js');
 
 module.exports.filter = filter;
 
+/**
+ * Filter settings.
+ */
 var settings = {
+    /**
+     * Minimum value for estimated variance. Used to provide a
+     * nonzero estimate of variance if RSSI quantization errors
+     * provide an underestimated value. Also reduces some
+     * numerical issues in the AuxPHD filter.
+     */
     minimum_variance: 2.0,
+    /**
+     * Length of the window used to estimate the average RSSI and its variance.
+     */
     backgroundWindow: 100,
+    /**
+     * Number of standard deviations past which an observation is considered an outlier.
+     */
     r: 2.0
 };
 module.exports.settings = settings;
 
 
-
+/**
+ * Moving average and -variance filters per link
+ */
 var link_filters = [];
 
-// beacons: [{receiver, transmitter, rssi}]
+/**
+ * Convert raw RSSI data into a list of observations.
+ * @param {array} rssiData - List of raw RSSI measurements {receiver, transmitter, rssi}
+ *      as returned by replay.getMeasurements().
+ * @param {array} modelBeacons - List of beacons {x, y, address} that should be
+ *      included in the filtered observations
+ * @returns {array} List of filtered observations {beacons: {receiver, transmitter},
+ *      delta_rssi, isOutlier, link_variance}
+ */
 function filter(rssiData, modelBeacons) {
     var linkRSSI = getAverageLinkRSSI(rssiData, modelBeacons);
     return subtractBackground(linkRSSI);
@@ -79,18 +104,12 @@ function subtractBackground(linkRSSI) {
             var variance = Math.max(settings.minimum_variance, filter.variance());
             var isOutlier = link.rssi > filter.average() + settings.r * variance ||
                     link.rssi < filter.average() - settings.r * variance;
-//            if (!isOutlier) {
-//                // Update the filter if this is not an outlier.
-//                filter.filter(link.rssi);
-//            }
-//            if (link.rssi < filter.average()) {
             observations.push({
                 beacons: link.beacons,
                 delta_rssi: -Math.abs(link.rssi - filter.average()),
                 isOutlier: isOutlier,
                 link_variance: variance
             });
-//            }
         }
     });
     return observations;
