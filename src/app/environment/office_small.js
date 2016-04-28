@@ -1,3 +1,9 @@
+/*
+ * Configuration of a subset of the physical test setup on the second floor of
+ * the Almende building.
+ */
+
+/** Array of beacons {x, y, address} */
 exports.beacons = [
     {x: 3.05, y: 4.05, address: 'C4:4C:CA:D7:A6:ED'},
     {x: 3.05, y: 2.20, address: 'EB:ED:23:6F:2E:C5'},
@@ -7,6 +13,13 @@ exports.beacons = [
     {x: 5.25, y: 3.95, address: 'E1:05:D3:D7:D9:81'}
 ];
 
+/** Array of beacons {x, y, address} that do not perform measurements */
+exports.tx_only = [];
+
+/** Array of all beacons {x, y, address} */
+exports.all_beacons = exports.beacons;
+
+/** Bounds of the environment {xmin, xmax, ymin, ymax} */
 exports.bounds = {
     xmin: 3.05,
     xmax: 5.25,

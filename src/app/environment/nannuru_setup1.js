@@ -1,3 +1,10 @@
+/*
+ * Simulated test setup with 24 beacons surrounding an 8x8m area, based on the
+ * experimental test setup in Nannuru et al. 2013 "Radio-Frequency Tomography
+ * for Passive Indoor Multitarget Tracking".
+ */
+
+/** Array of beacons {x, y, address} */
 exports.beacons = [
     {x: 0 / 6.0 * 8.0, y: 0.0, address: '1'},
     {x: 1 / 6.0 * 8.0, y: 0.0, address: '2'},
@@ -25,8 +32,13 @@ exports.beacons = [
     {x: 0.0, y: 1 / 6.0 * 8.0, address: '24'}
 ];
 
+/** Array of beacons {x, y, address} that do not perform measurements */
+exports.tx_only = [];
+
+/** Array of all beacons {x, y, address} */
 exports.all_beacons = exports.beacons;
 
+/** Bounds of the environment {xmin, xmax, ymin, ymax} */
 exports.bounds = {
     xmin: 0.0,
     xmax: 8.0,
