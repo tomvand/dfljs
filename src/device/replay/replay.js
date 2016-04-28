@@ -2,7 +2,6 @@
  * The device/replay module collects data from a log object specified using
  * open(), and transforms this into RSSI data that can be used by the filter
  * to provide data for the tracking algorithm.
- * @module
  */
 
 "use strict";
@@ -19,6 +18,11 @@ var timestamps;
 var index;
 var callback;
 
+/**
+ * Open a log file for replaying.
+ * @param {object} log_obj - Log object obtained by require()'ing a file from device/replay/log/.
+ * @param {function(elapsed_time)} cb - Function to call each recorded timestep.
+ */
 function open(log_obj, cb) {
     log = log_obj;
     timestamps = Object.keys(log.data).sort();
@@ -26,6 +30,11 @@ function open(log_obj, cb) {
     callback = cb;
 }
 
+/**
+ * Start file replay at actual speed. After run() is called once, timeouts
+ * will be set to keep presenting new measurements at the recorded rate.
+ * @param {function(elapsed_time)} cb - Function to call each recorded timestep.
+ */
 function run(cb) {
     if (cb) {
         callback = cb;
@@ -42,6 +51,10 @@ function run(cb) {
     runOnce();
 }
 
+/**
+ * Advance the replay of the log file by a single recorded timestep.
+ * @param {function(elapsed_time)} cb - Function to call each recorded timestep.
+ */
 function runOnce(cb) {
     if (cb) {
         callback = cb;
@@ -52,16 +65,19 @@ function runOnce(cb) {
     index++;
 }
 
+/**
+ * Get the current time of the recorded data.
+ * @returns {number} - Current time.
+ */
 function getCurrentTime() {
     return timestamps[index];
 }
 
 /**
- * Get a measurements vector of the next timestep.
- * @param {Beacon[]} beacons - list of beacons
- * @returns {undefined}
+ * Get a measurements vector of the current timestep.
+ * @returns {array} - Array of observations {{address} receiver, {address} transmitter, rssi}.
  */
-function getMeasurements(beacons) {
+function getMeasurements() {
     var now = log.data[timestamps[index]];
     var measurements = []; // Array of {receiver, transmitter, rssi}
 

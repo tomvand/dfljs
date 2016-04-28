@@ -1,0 +1,23 @@
+This folder contains recorded RSSI data of test setups. Log files were exported
+using python after the minicom log files of each beacon were parsed and
+combined.
+
+Log files are included using require(...) and assign an object with the
+following structure to the global object 'log':
+
+{
+    "data": {
+        <timestamp (as string)>: {
+            <device address>: {
+                <observed address>: [
+                    <RSSI (as string)>
+                    ...
+                ]
+            },
+            ...
+        },
+        ...
+    },
+    "endTimestamp": <last timestamp (as number)>,
+    "startTimestamp": <first timestamp (as number)>
+}
