@@ -16,7 +16,7 @@ RandomController.prototype.update = function (deltaT, bounds) {
     var ay = this.sigma_v * randn();
     this.controlled_actor.move_cart(deltaT * this.vx + (deltaT * deltaT / 2) * ax,
             deltaT * this.vy + (deltaT * deltaT / 2) * ay);
-    this.vx += ax;
+    this.vx += ax; // Error!
     this.vy += ay;
 
     if (bounds) {
