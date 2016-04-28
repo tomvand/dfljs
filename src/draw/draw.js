@@ -1,8 +1,7 @@
 /**
  * Draw module.
  *
- * Draws the current state of the simulation.
- * @module
+ * Draws the current state of the environment and observations.
  */
 
 var observation = require('../model/observation.js');
@@ -27,8 +26,7 @@ var FONT_LABEL = '10px Arial';
 var ctx;
 
 /**
- * @description Scale of the view (pixels/meter).
- * @type Number
+ * Drawing coordinate system
  */
 var world_coordinates;
 
@@ -54,7 +52,6 @@ function CoordinateSystem(scale, offsetX, offsetY, flipX, flipY) {
  * Transforms a point in this coordinate system to absolute coordinates.
  * If one argument is given: applies scaling.
  * If two arguments are given: applies scaling and offset.
- * @function
  * @param {number} x - x in this coordinate system.
  * @param {number} y - y in this coordinate system.
  * @returns x in the global system or {x, y} in the global system.
@@ -73,7 +70,6 @@ CoordinateSystem.prototype.transform = function (x, y) {
 /**
  * Open a rendering context on the specified canvas. All subsequent draw calls
  * will be performed in this context.
- * @function
  * @param {Canvas} canvas - canvas to draw to.
  */
 function attach(canvas) {
@@ -82,7 +78,6 @@ function attach(canvas) {
 
 /**
  * Set the viewport of the simulation
- * @function
  * @param {number} left - left position of the viewport.
  * @param {number} top - top position of the viewport.
  * @param {number} width - width of the viewport.
@@ -97,20 +92,8 @@ function setView(left, top, width, height) {
 }
 
 /**
- * A collection of objects in the simulation, that fully describes the current
- * state.
- * @typedef {Object} State
- * @property {Beacon[]} beacons - All beacons in the simulation.
- * @property {Actor[]} actors - All actors in the simulation.
- * @property {Measurement[]} measurements - All current measurements.
- */
-
-/**
  * Draw the current state of the simulation to the canvas.
- * @see attach
- * @function
- * @param {State} state
- * @returns {undefined}
+ * @param {State} state - State of the simulation {beacons: [beacon, ...], actors: [actor, ...], measurements: [measurement, ...]}.
  */
 function draw(state) {
     // Clear the canvas before drawing the current state.
