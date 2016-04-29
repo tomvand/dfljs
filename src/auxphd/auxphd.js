@@ -2,8 +2,6 @@
 
 module.exports = AuxPhdFilter;
 
-var assert = require('assert');
-
 var State = require('../model/state.js');
 var observation = require('../model/observation.js');
 
@@ -12,29 +10,57 @@ var randn = require('../util/randn.js');
 
 var clone = require('clone');
 
+/**
+ * Auxiliary particle filter-based PHD filter
+ *
+ * This filter follows the algorithm described in Nannuru 2015 "Multitarget
+ * multisensor tracking"
+ * http://networks.ece.mcgill.ca/sites/default/files/PhD_Thesis_Santosh.pdf
+ *
+ * The filter can be updated by calling the predict() and observe() functions.
+ *
+ * @param {number} maxTargets - Max number of targets (for k-means/silhouette clustering)
+ * @param {number} particlesPerTarget - Number of particles per target
+ * @param {number} auxiliaryParticles - Number of auxiliary particles
+ * @param {object} initInfo - Initialization info to pass to State constructor
+ * @param {object} bounds - Bounds of the tracking filter {xmin, xmax, ymin, ymax}
+ */
 function AuxPhdFilter(maxTargets, particlesPerTarget, auxiliaryParticles, initInfo, bounds) {
+    // Initialize particle filter
     this.Np = 0;
     this.Nmax = maxTargets;
     this.Nppt = particlesPerTarget;
     this.Jp = auxiliaryParticles;
     this.initialize(initInfo);
 
+    // Auxiliary particle filter tuning
     this.gamma2_p = 0.9;
     this.gamma2_sigma = Math.sqrt(0.25);
 
+    // Bounds
     this.initInfo = initInfo;
     this.bounds = bounds;
 
+    // DBSCAN parameters
     this.eps = 0.6;
     this.minPts = 0.2 * particlesPerTarget;
 
+    // Clusters and list of cluster assignments per particle
     this.clusters = [];
     this.clusterAssignments = [];
 
+    /**
+     * Clustering settings
+     *
+     * Adjust these values to set the clustering methods.
+     * clusterMethod: 'dbscan' or 'kmeans'
+     * fixedNumberOfTargets: number of targets, or null for variable/unknown
+     */
     this.clusterMethod = 'dbscan'; // 'dbscan' or 'kmeans'
     this.fixedNumberOfTargets = null;
 }
 
+// Initialize particles
 AuxPhdFilter.prototype.initialize = function (initInfo) {
     // 1: Initialize particles
     this.particles = [];
@@ -48,6 +74,10 @@ AuxPhdFilter.prototype.initialize = function (initInfo) {
     }
 };
 
+/**
+ * Perform time prediction step of the particle filter
+ * @param {number} deltaT - Length of timestep
+ */
 AuxPhdFilter.prototype.predict = function (deltaT) {
     // 3: Npk
     var Npk = this.Np * this.Nppt;
@@ -55,12 +85,13 @@ AuxPhdFilter.prototype.predict = function (deltaT) {
     for (var i = 0; i < Npk; i++) {
         this.particles[i].state.predict(deltaT);
         this.particles[i].weight *= this.particles[i].state.survive();
-//        if (!(this.clusterAssignments[i] > 0)) {
-//            this.particles[i].weight *= 0.20;
-//        }
     }
 };
 
+/**
+ * Perform observation step of the particle filter
+ * @param {array} observations - Array of observations [{receiver, transmitter, delta_rssi, link_variance}, ...]
+ */
 AuxPhdFilter.prototype.observe = function (observations) {
     if (observations.length <= 0) {
         return;
@@ -156,7 +187,7 @@ AuxPhdFilter.prototype.observe = function (observations) {
     this.clusterAssignments = clusterInfo.assignments;
 };
 
-
+// Update particle weights
 AuxPhdFilter.prototype.updateWeights = function (observations) {
     // 11, 20: Gaussian approximation of predicted measurement
     var Npk = this.Np * this.Nppt;
@@ -202,7 +233,7 @@ AuxPhdFilter.prototype.updateWeights = function (observations) {
     }
 };
 
-
+// Apply k-means clustering
 AuxPhdFilter.prototype.kmeans = function (N) {
     // Prepare for clustering
     var clusters = [];
@@ -267,7 +298,8 @@ AuxPhdFilter.prototype.kmeans = function (N) {
     };
 };
 
-
+// Apply k-means for 2 to Nmax targets. Select the clusters with the best
+// average silhouette.
 AuxPhdFilter.prototype.best_silhouette = function () {
     var bestSilhouette = -1.0;
     var bestn = 2;
@@ -317,6 +349,7 @@ AuxPhdFilter.prototype.best_silhouette = function () {
 };
 
 
+// DBSCAN clustering
 AuxPhdFilter.prototype.DBSCAN = function () {
     // Pre-calculate a distance matrix
     var dist = this.distanceMatrix();
@@ -367,7 +400,7 @@ AuxPhdFilter.prototype.DBSCAN = function () {
     };
 };
 
-
+// Calculate distance matrix for all particles
 AuxPhdFilter.prototype.distanceMatrix = function () {
     var dist = [];
     for (var i = 0; i < this.particles.length; i++) {
@@ -379,6 +412,8 @@ AuxPhdFilter.prototype.distanceMatrix = function () {
     return dist;
 };
 
+// Find particles within distance 'eps' of the particle at index 'index',
+// using the previously computed distance matrix 'dist'
 function regionQuery(dist, index, eps) {
     var result = [];
     for (var i = 0; i < index; i++) {
@@ -394,6 +429,7 @@ function regionQuery(dist, index, eps) {
     return result;
 }
 
+// Add position to cluster and keep track of weighted mean.
 function addWeightedPosition(cluster, particle) {
     if (cluster.weight + particle.weight > 0) {
         cluster.x = (cluster.x * cluster.weight + particle.state.x * particle.weight) /
@@ -404,7 +440,7 @@ function addWeightedPosition(cluster, particle) {
     }
 }
 
-
+// Calculate distance between positions.
 function distance(pos1, pos2) {
     var dx = pos1.x - pos2.x;
     var dy = pos1.y - pos2.y;
