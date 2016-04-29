@@ -14,7 +14,7 @@ var params = {
 };
 exports.params = params;
 
-exports.observe_all = observe_all;
+//exports.observe_all = observe_all;
 
 exports.observe = observe;
 

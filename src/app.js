@@ -1,1 +1,1 @@
-require('./app/appreplay.js');
+require('./app/appsim.js');

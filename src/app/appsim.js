@@ -1,16 +1,25 @@
+/**
+ * AppSim.
+ *
+ * This is the main function to run simulations with the particle filter in a
+ * browser.
+ */
+
+// Particle filter
 var AuxPhd = require('../auxphd/auxphd.js');
+
+// Simulation environment
+var environment = require('./environment/first_floor.js');
+var measure = require('../sim/measure.js');
+var Actor = require('../sim/actor.js');
+
+// User interface
 var draw = require('../draw/draw.js');
 var drawAuxPhd = require('../draw/draw_auxphd.js');
-var environment = require('./environment/first_floor.js');
-
-var Actor = require('../sim/actor.js');
-var measure = require('../sim/measure.js');
 var keyboard = require('../sim/keyboardcontroller.js');
-var RandomController = require('../sim/randomcontroller.js');
 
-var observation_model = require('../model/observation');
 
-var clone = require('clone');
+
 
 // Set up the tracking filter
 var NMaxTargets = 5;
@@ -29,6 +38,8 @@ var actors = [
             Math.random() * 2 * Math.PI)
 ];
 
+
+// Set up keyboard controller
 document.onkeydown = keyboard.onKeyPress;
 keyboard.posess(actors[0]);
 
@@ -40,6 +51,7 @@ var state = {
     measurements: []
 };
 
+
 // Set up drawing
 draw.attach(document.getElementById('canvas'));
 draw.setView(environment.bounds.xmin - 1.0,
@@ -47,10 +59,13 @@ draw.setView(environment.bounds.xmin - 1.0,
         environment.bounds.xmax - environment.bounds.xmin + 2.0,
         environment.bounds.ymax - environment.bounds.ymin + 2.0);
 
+
 // Set up measurement updates
 var meas_period = 0.25;
 var meas_probability = 0.40;
 
+
+// Start simulation
 interval = setInterval(function () {
     // Update measurements
     state.measurements = [];
