@@ -1,7 +1,16 @@
+/**
+ * Particle state model including prediction
+ */
+
 module.exports = State;
 
 randn = require('../util/randn.js');
 
+/**
+ * Particle state
+ * @param {object} initInfo - Initialization info object that contains bounds of the environment {xmin, xmax, ymin, ymax}
+ * @param {bool} jumpstate - Set to true to use a jump-state markov model, otherwise a random walking model is used
+ */
 function State(initInfo, jumpstate) {
     this.initInfo = initInfo;
     this.initialize(initInfo);
@@ -12,6 +21,7 @@ function State(initInfo, jumpstate) {
     }
 }
 
+// Initialize particles randomly
 State.prototype.initialize = function (initInfo) {
     this.x = initInfo.xmin + Math.random() * (initInfo.xmax - initInfo.xmin);
     this.y = initInfo.ymin + Math.random() * (initInfo.ymax - initInfo.ymin);
@@ -19,12 +29,14 @@ State.prototype.initialize = function (initInfo) {
     this.speed = 0.0;
 };
 
+// Random walking time update
 function predict_random(deltaT) {
     var sigma_v = 1.5;
     this.x += sigma_v * randn() * deltaT;
     this.y += sigma_v * randn() * deltaT;
 }
 
+// Jump-state markov model
 function predict_jumpstate(deltaT) {
     var isStationary = Math.abs(this.speed) < 0.05;
     if (isStationary && Math.random() < 0.10) {
@@ -38,8 +50,12 @@ function predict_jumpstate(deltaT) {
     this.x += Math.cos(this.direction) * this.speed * deltaT;
     this.y += Math.sin(this.direction) * this.speed * deltaT;
 }
-;
 
+/**
+ * Get particle survival probability. This probability is set to 0 when the
+ * state is out of bounds (as given in initInfo).
+ * @returns {Number} Survival probability
+ */
 State.prototype.survive = function () {
     var isInBounds = this.x >= this.initInfo.xmin &&
             this.x <= this.initInfo.xmax &&
@@ -52,6 +68,10 @@ State.prototype.survive = function () {
     }
 };
 
+/**
+ * Get particle birth rate
+ * @returns {Number} - Birth rate
+ */
 State.prototype.birth = function () {
     return 0.2;
 };
